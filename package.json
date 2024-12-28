@@ -1,0 +1,28 @@
+{
+  "name": "b2win",
+  "version": "1.0.0",
+  "description": "Sports prediction and betting Tips Platform",
+  "main": "index.js",
+  "scripts": {
+    "start": "NODE_ENV=production node index",
+    "dev": "nodemon index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://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@github.com/blackoin-studio/B2win.git"
+  },
+  "author": "Okafor Ifechukwu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/blackoin-studio/B2win/issues"
+  },
+  "homepage": "https://github.com/blackoin-studio/B2win#readme",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
