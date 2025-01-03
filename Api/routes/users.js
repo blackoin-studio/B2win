@@ -5,6 +5,6 @@ const router = express.Router({ mergeParams: true });
 
 router.route("/").get(fetchUsers);
 router.route("/register").post(registerUser);
-router.route("/login").get(loginUser);
+router.route("/login").post(loginUser);
 
 module.exports = router;
