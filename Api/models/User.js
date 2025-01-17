@@ -4,7 +4,15 @@ const bcrypt = require("bcryptjs");
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  username: { type: String, required: true, unique: true }, // New username field
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  username: { type: String, required: true, unique: true },
 });
 
 // Encrypt password using bcrypt
