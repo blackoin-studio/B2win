@@ -19,7 +19,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-app.use("./uploads", express.static("uploads"));
+app.use("/public", express.static("./uploads"));
 
 app.use("/api/v1/users", users);
 app.use("/api/v1/predictions", predictions);
