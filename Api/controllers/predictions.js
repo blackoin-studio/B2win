@@ -17,13 +17,13 @@ exports.createPrediction = (req, res) => {
       // If logos are uploaded, use the file paths; else use default logos
       // Get the uploaded image file paths
       const leagueLogo = req.files["leagueLogo"]
-        ? `/uploads/${req.files["leagueLogo"][0].filename}`
+        ? `${req.files["leagueLogo"][0].filename}`
         : "no-league-photo.jpg";
       const homeLogo = req.files["homeLogo"]
-        ? `/uploads/${req.files["homeLogo"][0].filename}`
+        ? `${req.files["homeLogo"][0].filename}`
         : "no-home-photo.jpg";
       const awayLogo = req.files["awayLogo"]
-        ? `/uploads/${req.files["awayLogo"][0].filename}`
+        ? `${req.files["awayLogo"][0].filename}`
         : "no-away-photo.jpg";
 
       const newPrediction = new Prediction({
@@ -117,12 +117,10 @@ exports.updatePrediction = async (req, res) => {
       return res.status(404).json({ message: "Prediction not found" });
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Prediction updated successfully",
-        prediction: updatedPrediction,
-      });
+    res.status(200).json({
+      message: "Prediction updated successfully",
+      prediction: updatedPrediction,
+    });
   } catch (error) {
     res
       .status(500)
