@@ -1,0 +1,371 @@
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #1e1e1e; /* Dark background */
+  color: #fff; /* White text for contrast */
+  line-height: 1.6;
+  scroll-behavior: smooth;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Navbar */
+header {
+  background-color: #1e1e1e;
+  padding: 20px 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 10;
+}
+
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+}
+
+.logo {
+  height: 40px;
+  color: #e33e3e;
+  font-size: 40px;
+}
+
+nav ul {
+  display: flex;
+  list-style: none;
+}
+
+nav ul li {
+  margin-left: 30px;
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: #fff;
+  font-weight: 600;
+}
+
+.cta-btn {
+  padding: 12px 30px;
+  background-color: #ff4c4c; /* Red */
+  color: #fff;
+  font-weight: 600;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.cta-btn:hover {
+  background-color: #e33e3e; /* Slightly darker red */
+}
+
+/* Hero Section */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 100px 30px;
+  background: linear-gradient(
+    135deg,
+    #ff4c4c 0%,
+    #1e1e1e 100%
+  ); /* Red to black gradient */
+  color: #fff;
+  margin-top: 80px;
+  gap: 30px;
+}
+
+.hero-content {
+  max-width: 600px;
+}
+
+.hero h1 {
+  font-size: 48px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.hero-btn {
+  padding: 30px 20px 5px 20px;
+  background-color: #ff4c4c;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.hero-btn:hover {
+  background-color: #e33e3e;
+}
+
+.hero-image img {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Features Section */
+.features {
+  padding: 80px 30px;
+  background-color: #1e1e1e; /* Black background */
+  text-align: center;
+}
+
+.features .section-title {
+  font-size: 40px;
+  margin-bottom: 40px;
+  color: #ff4c4c; /* Red for contrast */
+}
+
+.feature-cards {
+  display: flex;
+  justify-content: space-around;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.feature-card {
+  background-color: #333; /* Dark gray card background */
+  padding: 40px;
+  width: 30%;
+  border-radius: 10px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+}
+
+.feature-card img {
+  width: 200px;
+  margin-bottom: 20px;
+}
+
+.feature-card h3 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #ff4c4c; /* Red heading text */
+}
+
+.feature-card p {
+  color: #ddd; /* Light gray text for descriptions */
+}
+
+/* Download Section */
+.download {
+  background-color: #1e1e1e;
+  padding: 80px 30px;
+  text-align: center;
+}
+
+.download .section-title {
+  font-size: 40px;
+  margin-bottom: 40px;
+  color: #ff4c4c; /* Red */
+}
+
+.download-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+}
+
+.download-buttons a {
+  padding: 15px 40px;
+  background-color: #ff4c4c; /* Red */
+  color: #fff;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.download-buttons a:hover {
+  background-color: #e33e3e;
+}
+
+.btn-appstore {
+  background-color: #333; /* Dark gray for App Store */
+}
+
+.btn-playstore {
+  background-color: #34b7f1; /* Google Play's blue */
+}
+
+/* Contact Section */
+footer {
+  background-color: #1e1e1e;
+  color: #fff;
+  padding: 30px 0;
+  text-align: center;
+}
+
+footer p {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+footer a {
+  color: #ff4c4c; /* Red for email links */
+  font-weight: 600;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1024px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-image img {
+    max-width: 450px;
+    margin-top: 30px;
+  }
+
+  .feature-cards {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .feature-card {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .cta-btn {
+    padding: 10px 25px;
+    font-size: 16px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  header nav {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  nav ul {
+    flex-direction: column;
+    margin-top: 20px;
+  }
+
+  nav ul li {
+    margin-left: 0;
+    margin-top: 15px;
+  }
+
+  .hero-content h1 {
+    font-size: 36px;
+  }
+
+  .hero-content p {
+    font-size: 16px;
+  }
+
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 50px 20px;
+  }
+
+  .hero-btn {
+    font-size: 14px;
+    padding: 30px 20px 5px 20px;
+  }
+  .hero-btn img {
+    width: 30%;
+  }
+
+  .hero-image img {
+    max-width: 90%;
+    margin-top: 30px;
+  }
+
+  .features .section-title {
+    font-size: 32px;
+  }
+
+  .feature-card {
+    width: 100%;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .download .section-title {
+    font-size: 32px;
+  }
+
+  .download-buttons a {
+    font-size: 14px;
+    padding: 12px 30px;
+  }
+
+  .cta-btn,
+  .nav-link {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .hero h1 {
+    font-size: 28px;
+  }
+
+  .hero p {
+    font-size: 14px;
+  }
+
+  .cta-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  .features .section-title {
+    font-size: 28px;
+  }
+
+  .feature-card h3 {
+    font-size: 18px;
+  }
+
+  .feature-card p {
+    font-size: 14px;
+  }
+
+  .download .section-title {
+    font-size: 28px;
+  }
+
+  .download-buttons a {
+    font-size: 14px;
+    padding: 10px 25px;
+  }
+
+  .cta-btn,
+  .nav-link {
+    display: none;
+  }
+}
