@@ -19,10 +19,16 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-app.use("/public", express.static("./uploads"));
+app.use("/public", express.static("./public"));
+app.use("/", express.static("./public"));
 
 app.use("/api/v1/users", users);
 app.use("/api/v1/predictions", predictions);
+
+// render Landing Page
+// app.get("/", function (req, res) {
+//   res.sendFile("./public/index.html");
+// });
 
 const PORT = process.env.PORT || 5000;
 const server = app.listen(
