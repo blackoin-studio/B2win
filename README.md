@@ -54,6 +54,8 @@ Ensure you have the following installed:
 ## 2. Install the required dependencies:
 
 ```bash
+flutter clean
+
 flutter pub get
 ```
 
