@@ -4,7 +4,7 @@ const path = require("path");
 // Define storage location and filename for uploaded files
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "public/"); // Save files to the "uploads" directory
+    cb(null, "public/"); // Save files to the "public" directory
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname)); // Use current timestamp to avoid name collisions
@@ -29,11 +29,7 @@ const upload = multer({
       cb(new Error("Only image files are allowed"));
     }
   },
-}).fields([
-  { name: "leagueLogo", maxCount: 1 },
-  { name: "homeLogo", maxCount: 1 },
-  { name: "awayLogo", maxCount: 1 },
-]); // The field name for the uploaded file (e.g., 'logo')
+}).single("photo"); // The field name for the uploaded file (e.g., 'logo')
 
 // Export the upload middleware for use in routes
 module.exports = upload;
