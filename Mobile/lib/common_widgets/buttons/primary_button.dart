@@ -12,7 +12,7 @@ class TPrimaryButton extends StatelessWidget {
   });
 
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isLoading;
   final bool isFullWidth;
   final double width;
@@ -22,7 +22,7 @@ class TPrimaryButton extends StatelessWidget {
     return SizedBox(
       width: isFullWidth ? double.infinity : width,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         child: isLoading
             ? const ButtonLoadingWidget()
             : Text(text.toUpperCase()),

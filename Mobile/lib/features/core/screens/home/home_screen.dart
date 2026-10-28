@@ -9,8 +9,8 @@ import 'package:get/get.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
   @override
-  Widget build(context) {
-    final NavbarController controller = Get.put(NavbarController());
+  Widget build(BuildContext context) {
+    final NavbarController controller = Get.find<NavbarController>();
     var isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Scaffold(
         appBar: AppBar(

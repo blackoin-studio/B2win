@@ -1,4 +1,4 @@
-import 'package:b2win/features/authentication/screens/welcome/welcome_screen.dart';
+import 'package:b2win/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:liquid_swipe/PageHelpers/LiquidController.dart';
 import '../../../constants/colors.dart';
@@ -13,15 +13,13 @@ class OnBoardingController extends GetxController {
   RxInt currentPage = 0.obs;
 
   //Functions to trigger Skip, Next and onPageChange Events
-  skip() => currentPage.value != 2
+  void skip() => currentPage.value != 2
       ? controller.jumpToPage(page: 2)
-      : Get.off(
-        
-        const WelcomeScreen()
-        );
+      : Get.offNamed(AppRoutes.welcome);
 
-  animateToNextSlide() => currentPage.value <= 1?
-      controller.animateToPage(page: controller.currentPage + 1): Get.off(const WelcomeScreen());
+  void animateToNextSlide() => currentPage.value <= 1
+      ? controller.animateToPage(page: controller.currentPage + 1)
+      : Get.offNamed(AppRoutes.welcome);
   onPageChangedCallback(int activePageIndex) =>
       currentPage.value = activePageIndex;
 

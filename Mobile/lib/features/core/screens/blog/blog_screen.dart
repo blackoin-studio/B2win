@@ -1,6 +1,10 @@
+import 'package:b2win/common_widgets/loaders/blog_card_shimmer.dart';
+import 'package:b2win/common_widgets/loaders/empty_state_widget.dart';
 import 'package:b2win/constants/api_config.dart';
+import 'package:b2win/data/models/blog_model.dart';
 import 'package:b2win/features/core/controllers/blog_controller.dart';
-import 'package:b2win/features/core/screens/blog/blog_details_screen.dart';
+import 'package:b2win/features/core/controllers/profile_controller.dart';
+import 'package:b2win/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -8,10 +12,21 @@ import 'package:intl/intl.dart';
 class BlogScreen extends StatelessWidget {
   const BlogScreen({super.key});
 
+  String _formatDate(String rawDate) {
+    if (rawDate.isEmpty) return '';
+    try {
+      final parsed = DateTime.parse(rawDate);
+      return DateFormat('dd-MM-yyyy').format(parsed);
+    } catch (_) {
+      return rawDate.length >= 10 ? rawDate.substring(0, 10) : rawDate;
+    }
+  }
+
   @override
-  Widget build(context) {
-    final BlogController blogController = Get.put(BlogController());
-    final format = DateFormat('dd-mm-');
+  Widget build(BuildContext context) {
+    final BlogController blogController = Get.find<BlogController>();
+    final ProfileController profileController = Get.find<ProfileController>();
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -33,17 +48,21 @@ class BlogScreen extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 20),
-            Text(
-              "Hey, Vally",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
+            const SizedBox(height: 20),
+            Obx(() {
+              final username =
+                  profileController.currentUser.value?.username ?? 'Sports Fan';
+              return Text(
+                "Hey, $username",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            }),
+            const SizedBox(height: 10),
+            const Text(
               "Trending Blog",
               style: TextStyle(
                 color: Colors.white,
@@ -51,32 +70,53 @@ class BlogScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Blog List Section
             Expanded(
               child: Obx(() {
                 if (blogController.isLoading.value) {
-                  return Center(child: CircularProgressIndicator());
+                  return const BlogCardShimmer();
                 }
-                return ListView.builder(
-                  itemCount: blogController.blogs.length,
-                  itemBuilder: (context, index) {
-                    var blog = blogController.blogs[index];
-                    return BlogCard(
-                      title: blog['title'],
-                      description: blog['description'],
-                      date: format
-                          .parse(blog['date'])
-                          .toString()
-                          .substring(0, 10),
-                      //likes: blog['likes'],
-                      photo: '$imageUrl/${blog['photo']}',
-                      onTap: () {
-                        Get.to(() => BlogDetailsScreen(blog: blog));
-                      },
-                    );
-                  },
+
+                if (blogController.blogs.isEmpty) {
+                  return RefreshIndicator(
+                    onRefresh: () => blogController.fetchBlogData(),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        const SizedBox(height: 60),
+                        EmptyStateWidget(
+                          icon: Icons.article_outlined,
+                          title: 'No Blogs Available',
+                          subtitle:
+                              'Stay tuned! New match analysis and sports articles will appear here.',
+                          actionButtonText: 'Refresh',
+                          onRetry: () => blogController.fetchBlogData(),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () => blogController.fetchBlogData(),
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: blogController.blogs.length,
+                    itemBuilder: (context, index) {
+                      final BlogModel blog = blogController.blogs[index];
+                      return BlogCard(
+                        title: blog.title,
+                        description: blog.description,
+                        date: _formatDate(blog.date),
+                        photo: resolveMediaUrl(blog.photo),
+                        onTap: () {
+                          Get.toNamed(AppRoutes.blogDetails, arguments: blog);
+                        },
+                      );
+                    },
+                  ),
                 );
               }),
             ),
@@ -89,14 +129,12 @@ class BlogScreen extends StatelessWidget {
 
 class BlogCard extends StatelessWidget {
   final String title, description, date, photo;
-  // final int likes;
   final VoidCallback onTap;
 
   const BlogCard({
     super.key,
     required this.title,
     required this.date,
-    // required this.likes,
     required this.description,
     required this.photo,
     required this.onTap,
@@ -107,26 +145,37 @@ class BlogCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: Color(0xFF292938),
+          color: const Color(0xFF292938),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+            if (photo.isNotEmpty)
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                child: Image.network(
+                  photo,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 200,
+                    color: const Color(0xFF1E1E2C),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey,
+                      size: 40,
+                    ),
+                  ),
+                ),
               ),
-              child: Image.network(
-                photo,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -134,13 +183,13 @@ class BlogCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Text(

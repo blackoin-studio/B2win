@@ -129,3 +129,33 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+
+# Agent directories
+.agents/
+.gents/
+
+# Sensitive configuration, credentials & signing keys
+config.env
+*.env
+*.env.*
+!*.env.example
+!config.env.example
+*.pem
+*.key
+*.jks
+*.keystore
+key.properties
+Mobile/android/key.properties
+Mobile/upload-keystore.jks
+google-services.json
+GoogleService-Info.plist
+
+# Local machine & build caches
+Mobile/android/local.properties
+Mobile/android/.gradle/
+Mobile/.flutter-plugins
+Mobile/.flutter-plugins-dependencies
+
+# AdminFrontend build output
+AdminFrontend/dist/

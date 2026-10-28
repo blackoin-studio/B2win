@@ -9,13 +9,13 @@ class TSocialButton extends StatelessWidget {
     this.isLoading = false,
     required this.foreground,
     required this.background,
-    required this.onPressed,
+    this.onPressed,
   });
 
   final String text;
   final String image;
   final Color foreground, background;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isLoading;
 
   @override
@@ -23,7 +23,7 @@ class TSocialButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           elevation: 0,
           foregroundColor: foreground,

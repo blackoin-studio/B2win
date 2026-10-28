@@ -1,23 +1,14 @@
 const multer = require("multer");
 const path = require("path");
 
-// Define storage location and filename for uploaded files
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/"); // Save files to the "public" directory
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Use current timestamp to avoid name collisions
-  },
-});
+// Use memory storage so files can be streamed directly to Supabase Storage
+const storage = multer.memoryStorage();
 
-// Create multer instance for uploading files
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5 MB
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
   fileFilter: (req, file, cb) => {
-    // Allow only image files
-    const filetypes = /jpeg|jpg|png|gif/;
+    const filetypes = /jpeg|jpg|png|gif|webp/;
     const extname = filetypes.test(
       path.extname(file.originalname).toLowerCase()
     );
@@ -26,10 +17,9 @@ const upload = multer({
     if (mimetype && extname) {
       return cb(null, true);
     } else {
-      cb(new Error("Only image files are allowed"));
+      cb(new Error("Only image files (jpg, png, gif, webp) are allowed"));
     }
   },
-}).single("photo"); // The field name for the uploaded file (e.g., 'logo')
+}).single("photo");
 
-// Export the upload middleware for use in routes
 module.exports = upload;

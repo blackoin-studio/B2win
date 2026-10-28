@@ -6,7 +6,6 @@ import 'package:b2win/features/authentication/controllers/login_controller.dart'
 import '../../../../../constants/sizes.dart';
 import '../../../../../constants/text_strings.dart';
 import '../../../../../utils/helper/helper_controller.dart';
-// import '../../forget_password/forget_password_options/forget_password_model_bottom_sheet.dart';
 
 class LoginFormWidget extends StatelessWidget {
   const LoginFormWidget({
@@ -15,7 +14,7 @@ class LoginFormWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(LoginController());
+    final controller = Get.find<LoginController>();
     return Container(
       padding: const EdgeInsets.symmetric(vertical: formHeight),
       child: Form(
@@ -28,9 +27,10 @@ class LoginFormWidget extends StatelessWidget {
               validator: Helper.validateEmail,
               controller: controller.email,
               decoration: const InputDecoration(
-                  prefixIcon: Icon(LineAwesomeIcons.user),
-                  labelText: tEmail,
-                  hintText: tEmail),
+                prefixIcon: Icon(LineAwesomeIcons.user),
+                labelText: tEmail,
+                hintText: tEmail,
+              ),
             ),
             const SizedBox(height: formHeight - 20),
 
@@ -57,28 +57,32 @@ class LoginFormWidget extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: formHeight - 20),
+            const SizedBox(height: 8),
 
-            /// -- FORGET PASSWORD BTN
-            // Align(
-            //   alignment: Alignment.centerRight,
-            //   child: TextButton(
-            //     onPressed: () => ForgetPasswordScreen.buildShowModalBottomSheet(context),
-            //     child: const Text(tForgetPassword),
-            //   ),
-            // ),
+            /// -- FORGOT PASSWORD & RESEND CONFIRMATION ROW
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () => controller.resendConfirmationEmail(),
+                  child: const Text('Resend Confirmation'),
+                ),
+                TextButton(
+                  onPressed: () => controller.forgotPassword(),
+                  child: const Text(tForgetPassword),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
 
             /// -- LOGIN BTN
             Obx(
               () => TPrimaryButton(
-                isLoading: controller.isLoading.value ? true : false,
+                isLoading: controller.isLoading.value,
                 text: tLogin.tr,
-                onPressed: controller.isFacebookLoading.value ||
-                        controller.isGoogleLoading.value
-                    ? () {}
-                    : controller.isLoading.value
-                        ? () {}
-                        : () => controller.login(),
+                onPressed: () {
+                  controller.login();
+                },
               ),
             ),
           ],

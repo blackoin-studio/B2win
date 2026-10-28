@@ -1,11 +1,19 @@
-import 'dart:convert';
-import 'package:b2win/constants/api_config.dart';
+import 'package:b2win/data/models/blog_model.dart';
+import 'package:b2win/data/repositories/blog_repository.dart';
+import 'package:b2win/utils/helper/helper_controller.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 
 class BlogController extends GetxController {
-  var isLoading = true.obs;
-  var blogs = <dynamic>[].obs;
+  static BlogController get instance => Get.find();
+
+  final BlogRepository _repository;
+
+  BlogController({BlogRepository? repository})
+      : _repository = repository ?? BlogRepository();
+
+  final RxBool isLoading = true.obs;
+  final RxList<BlogModel> blogs = <BlogModel>[].obs;
+  final RxString errorMessage = ''.obs;
 
   @override
   void onInit() {
@@ -15,25 +23,15 @@ class BlogController extends GetxController {
 
   Future<void> fetchBlogData() async {
     try {
-      isLoading(true);
-      
-      final response = await http.get(Uri.parse('$baseUrl/blogs'));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        blogs.value = sortBlogDataByDate(data);
-      } else {
-        Get.snackbar('Error', 'Failed to load data');
-      }
+      isLoading.value = true;
+      errorMessage.value = '';
+      final result = await _repository.getBlogs();
+      blogs.assignAll(result);
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      errorMessage.value = e.toString();
+      Helper.errorSnackBar(title: 'Error', message: e.toString());
     } finally {
-      isLoading(false);
+      isLoading.value = false;
     }
-  }
-
-  List<dynamic> sortBlogDataByDate(List<dynamic> data) {
-    data.sort((a, b) => DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
-    return data;
   }
 }

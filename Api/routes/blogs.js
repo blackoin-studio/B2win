@@ -6,11 +6,19 @@ const {
   updateBlog,
   deleteBlog,
 } = require("../controllers/blogs");
+const { protect, adminOnly } = require("../middleware/auth");
 
 const router = express.Router({ mergeParams: true });
 
-router.route("/").get(getAllBlogs).post(createBlog);
+router
+  .route("/")
+  .get(getAllBlogs)
+  .post(protect, adminOnly, createBlog);
 
-router.route("/:id").get(getBlogById).put(updateBlog).delete(deleteBlog);
+router
+  .route("/:id")
+  .get(getBlogById)
+  .put(protect, adminOnly, updateBlog)
+  .delete(protect, adminOnly, deleteBlog);
 
 module.exports = router;

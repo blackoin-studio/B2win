@@ -12,9 +12,9 @@ class TFormDividerWidget extends StatelessWidget {
     final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Row(
       children: [
-        Flexible(child: Divider(thickness: 1, indent: 50, color: Colors.grey.withOpacity(0.3), endIndent: 10)),
-        Text(tOR, style: Theme.of(context).textTheme.bodyLarge!.apply(color: isDark ? tWhiteColor.withOpacity(0.5) : tDarkColor.withOpacity(0.5))),
-        Flexible(child: Divider(thickness: 1, indent: 10, color: Colors.grey.withOpacity(0.3), endIndent: 50)),
+        Flexible(child: Divider(thickness: 1, indent: 50, color: Colors.grey.withValues(alpha: 0.3), endIndent: 10)),
+        Text(tOR, style: Theme.of(context).textTheme.bodyLarge!.apply(color: isDark ? tWhiteColor.withValues(alpha: 0.5) : tDarkColor.withValues(alpha: 0.5))),
+        Flexible(child: Divider(thickness: 1, indent: 10, color: Colors.grey.withValues(alpha: 0.3), endIndent: 50)),
       ],
     );
   }

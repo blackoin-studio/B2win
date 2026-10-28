@@ -1,72 +1,85 @@
-import 'dart:convert';
-import 'package:b2win/features/authentication/screens/login/login_screen.dart';
-import 'package:http/http.dart' as http;
-
-import 'package:b2win/constants/api_config.dart';
+import 'package:b2win/core/network/api_exceptions.dart';
+import 'package:b2win/data/repositories/auth_repository.dart';
+import 'package:b2win/routes/app_routes.dart';
+import 'package:b2win/utils/helper/helper_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SignUpController extends GetxController {
   static SignUpController get instance => Get.find();
 
-  final showPassword = false.obs;
-  final isGoogleLoading = false.obs;
-  final isFacebookLoading = false.obs;
-  GlobalKey<FormState> signupFormKey = GlobalKey<FormState>();
+  final AuthRepository _authRepository;
 
-  // TextField Controllers to get data from TextFields
+  SignUpController({AuthRepository? authRepository})
+      : _authRepository = authRepository ?? AuthRepository();
+
+  final showPassword = false.obs;
+  final GlobalKey<FormState> signupFormKey = GlobalKey<FormState>();
+
+  // Form Field Controllers
   final email = TextEditingController();
   final password = TextEditingController();
   final userName = TextEditingController();
-  final phoneNo = TextEditingController();
 
   /// Loader
   final isLoading = false.obs;
 
-  // As in the AuthenticationRepository we are calling _setScreen() Method
-  // so, whenever there is change in the user state(), screen will be updated.
-  // Therefore, when new user is authenticated, AuthenticationRepository() detects
-  // the change and call _setScreen() to switch screens
+  @override
+  void onClose() {
+    email.dispose();
+    password.dispose();
+    userName.dispose();
+    super.onClose();
+  }
 
+  /// Register New User (triggers Supabase confirmation email when enabled)
+  Future<void> createUser() async {
+    if (!signupFormKey.currentState!.validate()) {
+      return;
+    }
 
-
-  /// Register New User 
-  Future createUser() async {
+    try {
       isLoading.value = true;
-      if (!signupFormKey.currentState!.validate()) {
-        isLoading.value = false;
-        return;
-      }
+      final fEmail = email.text.trim();
+      final fPassword = password.text.trim();
+      final fUsername = userName.text.trim();
 
-          final fEmail = email.text.trim();
-          final fPassword = password.text.trim();
-          final fUsername = userName.text.trim();
-
-      final response = await http.post(
-        Uri.parse('$baseUrl/users/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': fEmail,
-          'password': fPassword,
-          'username': fUsername,
-        }),
+      final message = await _authRepository.register(
+        email: fEmail,
+        password: fPassword,
+        username: fUsername,
       );
 
-      if (response.statusCode == 201) {
-          final success = jsonDecode(response.body)['message'];
-          isLoading.value = false;
-          Get.snackbar("Success", success.toString(),
-            snackPosition: SnackPosition.BOTTOM,
-            duration: const Duration(seconds: 20));
+      Helper.successSnackBar(title: 'Success', message: message);
+      Get.offNamed(AppRoutes.login);
+    } on ApiException catch (e) {
+      Helper.errorSnackBar(title: 'Error', message: e.message);
+    } catch (e) {
+      Helper.errorSnackBar(title: 'Error', message: e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
-          Get.off(() => const LoginScreen());
+  /// Initiate Supabase Google OAuth Sign-In
+  Future<void> signInWithGoogle() async {
+    try {
+      isLoading.value = true;
+      final oauthUrl = await _authRepository.getGoogleSignInUrl();
+      final uri = Uri.parse(oauthUrl);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        Helper.errorSnackBar(
+          title: 'Error',
+          message: 'Could not launch Google Sign-In browser.',
+        );
       }
-     else {
-        final error = jsonDecode(response.body)['error'];
-        isLoading.value = false;
-        Get.snackbar("Error", error.toString(),
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 20));
-      }
+    } on ApiException catch (e) {
+      Helper.errorSnackBar(title: 'Error', message: e.message);
+    } catch (e) {
+      Helper.errorSnackBar(title: 'Error', message: e.toString());
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

@@ -3,119 +3,411 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>B2WIN Sports Prediction App</title>
+    <meta
+      name="description"
+      content="B2WIN Sports Prediction App — Daily expert football predictions, live match tips, odds analysis, and sports news."
+    />
+    <title>B2WIN — Expert Sports Predictions &amp; Match Tips</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style1.css" />
-    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
   </head>
   <body>
-    <header>
-      <nav>
-        <h1 class="logo">B2wIN</h1>
-        <ul class="nav-link">
-          <li><a href="#features">Features</a></li>
-          <li>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <header class="site-header">
+      <nav class="navbar container" aria-label="Main navigation">
+        <a href="#" class="brand" aria-label="B2WIN Home">
+          <span class="brand-badge">B2</span><span class="brand-text">WIN</span>
+        </a>
+
+        <button
+          type="button"
+          class="mobile-menu-toggle"
+          id="mobileMenuBtn"
+          aria-expanded="false"
+          aria-controls="navMenu"
+          aria-label="Toggle navigation menu"
+        >
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+
+        <div class="nav-menu" id="navMenu">
+          <ul class="nav-links">
+            <li><a href="#predictions">Live Tips</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#blogs">News &amp; Insights</a></li>
+            <li><a href="#download">Download</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+          <div class="nav-actions">
+            <a href="/admin" class="btn btn-ghost">Admin Portal</a>
             <a
               href="https://play.google.com/store/apps/details?id=com.blackoinstudio.b2win"
-              >Download</a
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-primary"
+              >Get the App</a
             >
-          </li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-        <a href="#download" class="cta-btn">Get Started</a>
+          </div>
+        </div>
       </nav>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-      <div class="hero-content" data-aos="fade-right">
-        <h1>B2WIN Sports Prediction App</h1>
-        <p>
-          Your ultimate guide to accurate sports predictions on soccer games &
-          more.
-        </p>
-        <a
-          href="https://play.google.com/store/apps/details?id=com.blackoinstudio.b2win"
-          class="hero-btn"
-          ><img
-            src="./images/google-play-btn.png"
-            alt="download from play store"
-            width="20%"
-        /></a>
-      </div>
-      <div class="hero-image" data-aos="fade-left">
-        <img src="./images/flying-iphone-12-mockup.png" alt="App Screenshot" />
-      </div>
-    </section>
+    <main id="main-content">
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-content">
+            <div class="eyebrow-pill">
+              <span class="live-dot" aria-hidden="true"></span>
+              Daily Verified Football Predictions
+            </div>
+            <h1>
+              Smarter Sports Tips.
+              <span class="text-gradient">Real Winning Edge.</span>
+            </h1>
+            <p class="hero-subtitle">
+              Get data-driven match predictions, curated odds, and expert
+              analysis across the Champions League, Premier League, La Liga,
+              Serie A, and 50+ global competitions.
+            </p>
+            <div class="hero-cta-group">
+              <a
+                href="https://play.google.com/store/apps/details?id=com.blackoinstudio.b2win"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-primary btn-lg"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 20.5v-17c0-.83.94-1.3 1.6-.8l14 8.5c.6.37.6 1.23 0 1.6l-14 8.5c-.66.5-1.6.03-1.6-.8z"
+                  />
+                </svg>
+                Download on Google Play
+              </a>
+              <a href="#predictions" class="btn btn-outline btn-lg">
+                View Today's Tips
+              </a>
+            </div>
 
-    <!-- Features Section -->
-    <section id="features" class="features">
-      <h2 class="section-title" data-aos="fade-up">Key Features</h2>
-      <div class="feature-cards">
-        <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
-          <img src="./images/Helpful-sign-bro.png" alt="Feature 1" />
-          <h3>Accurate Predictions</h3>
+            <dl class="hero-stats" aria-label="Platform highlights">
+              <div class="stat-item">
+                <dt>Major Leagues</dt>
+                <dd>50+</dd>
+              </div>
+              <div class="stat-item">
+                <dt>Active Tipsters &amp; Users</dt>
+                <dd id="statUsersCount">400+</dd>
+              </div>
+              <div class="stat-item">
+                <dt>Daily Updates</dt>
+                <dd>24/7</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="hero-visual">
+            <div class="hero-glow" aria-hidden="true"></div>
+            <img
+              src="./images/flying-iphone-12-mockup.png"
+              alt="B2WIN mobile application showing daily football predictions"
+              class="hero-mockup"
+              width="480"
+              height="520"
+              fetchpriority="high"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Predictions Section -->
+      <section
+        id="predictions"
+        class="section predictions-section"
+        aria-labelledby="predictions-heading"
+      >
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <span class="section-tag">LIVE MATCH TIPS</span>
+              <h2 id="predictions-heading" class="section-title">
+                Latest Predictions &amp; Results
+              </h2>
+            </div>
+
+            <div
+              class="filter-tabs"
+              role="tablist"
+              aria-label="Filter predictions by status"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected="true"
+                class="filter-pill active"
+                data-filter="all"
+              >
+                All
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected="false"
+                class="filter-pill"
+                data-filter="pending"
+              >
+                Pending
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected="false"
+                class="filter-pill"
+                data-filter="won"
+              >
+                Won
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected="false"
+                class="filter-pill"
+                data-filter="lost"
+              >
+                Lost
+              </button>
+            </div>
+          </div>
+
+          <div
+            id="predictionsGrid"
+            class="predictions-grid"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <!-- Skeleton loaders populated until API responds -->
+            <div class="prediction-card skeleton-card" aria-hidden="true"></div>
+            <div class="prediction-card skeleton-card" aria-hidden="true"></div>
+            <div class="prediction-card skeleton-card" aria-hidden="true"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section
+        id="features"
+        class="section features-section"
+        aria-labelledby="features-heading"
+      >
+        <div class="container">
+          <div class="section-header centered">
+            <span class="section-tag">WHY CHOOSE B2WIN</span>
+            <h2 id="features-heading" class="section-title">
+              Built for Serious Football Fans
+            </h2>
+            <p class="section-desc">
+              Everything you need to track match tips, analyze odds, and stay
+              ahead of kick-off.
+            </p>
+          </div>
+
+          <div class="feature-cards">
+            <article class="feature-card">
+              <div class="feature-icon-wrap">
+                <img
+                  src="./images/Helpful-sign-bro.png"
+                  alt=""
+                  loading="lazy"
+                  width="140"
+                  height="140"
+                />
+              </div>
+              <h3>Accurate Match Tips</h3>
+              <p>
+                Get daily curated football predictions and value tips for
+                Champions League, Premier League, Ligue 1, La Liga, and more.
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon-wrap">
+                <img
+                  src="./images/Confirmed-bro.png"
+                  alt=""
+                  loading="lazy"
+                  width="140"
+                  height="140"
+                />
+              </div>
+              <h3>Fast, Intuitive Interface</h3>
+              <p>
+                Clean match cards with transparent status tracking (Won,
+                Pending, Lost), live scores, and instant kick-off times.
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon-wrap">
+                <img
+                  src="./images/Project-Stages-pana.png"
+                  alt=""
+                  loading="lazy"
+                  width="140"
+                  height="140"
+                />
+              </div>
+              <h3>Sports News &amp; Guides</h3>
+              <p>
+                Read tactical previews, injury updates, and betting strategy
+                guides directly inside the app or web portal.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Latest Blogs Section -->
+      <section
+        id="blogs"
+        class="section blogs-section"
+        aria-labelledby="blogs-heading"
+      >
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <span class="section-tag">SPORTS INSIGHTS</span>
+              <h2 id="blogs-heading" class="section-title">
+                Latest News &amp; Articles
+              </h2>
+            </div>
+          </div>
+
+          <div
+            id="blogsGrid"
+            class="blogs-grid"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <div class="blog-card skeleton-card" aria-hidden="true"></div>
+            <div class="blog-card skeleton-card" aria-hidden="true"></div>
+            <div class="blog-card skeleton-card" aria-hidden="true"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Download CTA Section -->
+      <section
+        id="download"
+        class="section download-section"
+        aria-labelledby="download-heading"
+      >
+        <div class="container">
+          <div class="download-banner">
+            <div class="download-copy">
+              <span class="section-tag">MOBILE EXPERIENCE</span>
+              <h2 id="download-heading">Never Miss a Winning Tip</h2>
+              <p>
+                Download the official B2WIN mobile app for instant push
+                notifications when new daily predictions go live.
+              </p>
+              <div class="download-buttons">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.blackoinstudio.b2win"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-primary btn-lg"
+                >
+                  Get it on Google Play
+                </a>
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.blackoinstudio.b2win"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-outline btn-lg"
+                >
+                  Download on App Store
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="contact" class="site-footer">
+      <div class="container footer-inner">
+        <div class="footer-brand">
+          <a href="#" class="brand">
+            <span class="brand-badge">B2</span><span class="brand-text">WIN</span>
+          </a>
           <p>
-            Get daily sports predictions and tips for major leagues like
-            Champions League, Premier League, Ligue 1, La Liga, and more.
+            Your trusted platform for football predictions, match insights, and
+            sports analysis.
           </p>
         </div>
-        <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
-          <img src="./images/Confirmed-bro.png" alt="Feature 2" />
-          <h3>User-Friendly Interface</h3>
+        <div class="footer-contact">
           <p>
-            The elegant design and intuitive interface make it easy to navigate
-            the app and get the information you need.
+            Support &amp; Inquiries:
+            <a href="mailto:blackoinplc@gmail.com">blackoinplc@gmail.com</a>
           </p>
-        </div>
-        <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
-          <img src="./images/Project-Stages-pana.png" alt="Feature 3" />
-          <h3>Comprehensive Sections</h3>
-          <p>
-            Access various sections, including a How To Use guide, live scores,
-            news updates, and more.
+          <p class="footer-meta">
+            &copy; <span id="currentYear">2026</span> B2WIN by Blackoin Studio.
+            All rights reserved. &middot;
+            <a href="/admin">Admin Dashboard</a>
           </p>
         </div>
       </div>
-    </section>
+    </footer>
 
-    <!-- Download Section -->
-    <section id="download" class="download">
-      <h2 class="section-title" data-aos="fade-up">Download B2WIN App</h2>
-      <div class="download-buttons">
-        <a
-          href="https://play.google.com/store/apps/details?id=com.blackoinstudio.b2win"
-          class="btn-appstore"
-          data-aos="fade-up"
-          data-aos-delay="100"
-          >Download on the App Store</a
-        >
-        <a
-          href="https://play.google.com/store/apps/details?id=com.blackoinstudio.b2win"
-          class="btn-playstore"
-          data-aos="fade-up"
-          data-aos-delay="200"
-          >Get it on Google Play</a
-        >
+    <!-- Blog Reader Modal -->
+    <div
+      id="blogModal"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="blogModalTitle"
+      hidden
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <span id="blogModalDate" class="blog-date"></span>
+          <button
+            type="button"
+            id="closeBlogModalBtn"
+            class="modal-close-btn"
+            aria-label="Close article"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <img
+            id="blogModalImage"
+            src=""
+            alt=""
+            class="modal-cover-img"
+            loading="lazy"
+          />
+          <h3 id="blogModalTitle" class="modal-title"></h3>
+          <div id="blogModalContent" class="modal-text"></div>
+        </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-      <footer>
-        <p>If we helped, please support our app!</p>
-        <p>
-          Contact Email:
-          <a href="mailto:blackoinplc@gmail.com">blackoinplc@gmail.com</a>
-        </p>
-        <p>Made with &#128151;</p>
-      </footer>
-    </section>
-
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
   </body>
 </html>

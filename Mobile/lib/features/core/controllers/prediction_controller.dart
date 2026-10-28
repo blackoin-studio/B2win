@@ -1,11 +1,45 @@
-import 'dart:convert';
-import 'package:b2win/constants/api_config.dart';
+import 'package:b2win/data/models/prediction_model.dart';
+import 'package:b2win/data/repositories/prediction_repository.dart';
+import 'package:b2win/utils/helper/helper_controller.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 
 class GameController extends GetxController {
-  var isLoading = true.obs;
-  var games = <dynamic>[].obs;
+  static GameController get instance => Get.find();
+
+  final PredictionRepository _repository;
+
+  GameController({PredictionRepository? repository})
+      : _repository = repository ?? PredictionRepository();
+
+  final RxBool isLoading = true.obs;
+  final RxList<PredictionModel> games = <PredictionModel>[].obs;
+  final RxString errorMessage = ''.obs;
+  final RxString selectedStatus = 'all'.obs;
+  final RxString searchQuery = ''.obs;
+
+  List<PredictionModel> get filteredGames {
+    final status = selectedStatus.value.toLowerCase();
+    final query = searchQuery.value.trim().toLowerCase();
+
+    return games.where((g) {
+      final matchesStatus =
+          status == 'all' || g.status.toLowerCase() == status;
+      final matchesSearch = query.isEmpty ||
+          g.homeTeam.toLowerCase().contains(query) ||
+          g.awayTeam.toLowerCase().contains(query) ||
+          g.league.toLowerCase().contains(query) ||
+          g.tip.toLowerCase().contains(query);
+      return matchesStatus && matchesSearch;
+    }).toList();
+  }
+
+  void setStatusFilter(String status) {
+    selectedStatus.value = status.toLowerCase();
+  }
+
+  void setSearchQuery(String query) {
+    searchQuery.value = query;
+  }
 
   @override
   void onInit() {
@@ -15,25 +49,15 @@ class GameController extends GetxController {
 
   Future<void> fetchGameData() async {
     try {
-      isLoading(true);
-      
-      final response = await http.get(Uri.parse('$baseUrl/predictions'));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        games.value = sortGameDataByDate(data);
-      } else {
-        Get.snackbar('Error', 'Failed to load data');
-      }
+      isLoading.value = true;
+      errorMessage.value = '';
+      final result = await _repository.getPredictions();
+      games.assignAll(result);
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      errorMessage.value = e.toString();
+      Helper.errorSnackBar(title: 'Error', message: e.toString());
     } finally {
-      isLoading(false);
+      isLoading.value = false;
     }
-  }
-
-  List<dynamic> sortGameDataByDate(List<dynamic> data) {
-    data.sort((a, b) => DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
-    return data;
   }
 }

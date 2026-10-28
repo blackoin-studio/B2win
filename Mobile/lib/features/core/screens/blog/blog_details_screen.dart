@@ -1,20 +1,33 @@
 import 'package:b2win/constants/api_config.dart';
+import 'package:b2win/data/models/blog_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class BlogDetailsScreen extends StatelessWidget {
-  final Map blog;
+  final BlogModel? blog;
 
-  const BlogDetailsScreen({super.key, required this.blog});
+  const BlogDetailsScreen({super.key, this.blog});
+
+  String _formatDate(String rawDate) {
+    if (rawDate.isEmpty) return '';
+    try {
+      final parsed = DateTime.parse(rawDate);
+      return DateFormat('yyyy-MM-dd').format(parsed);
+    } catch (_) {
+      return rawDate.length >= 10 ? rawDate.substring(0, 10) : rawDate;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final format = DateFormat('yyyy-MM-dd');
+    final BlogModel activeBlog = blog ?? (Get.arguments as BlogModel);
+    final String coverUrl = resolveMediaUrl(activeBlog.photo);
+
     return Scaffold(
-      backgroundColor: Color(0xFF1E1E2C),
+      backgroundColor: const Color(0xFF1E1E2C),
       appBar: AppBar(
-        backgroundColor: Color(0xFF1E1E2C),
+        backgroundColor: const Color(0xFF1E1E2C),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -23,42 +36,53 @@ class BlogDetailsScreen extends StatelessWidget {
           },
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                '$imageUrl/${blog['photo']}',
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
+            if (coverUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  coverUrl,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 200,
+                    color: const Color(0xFF292938),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey,
+                      size: 40,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
-              blog['title'],
-              style: TextStyle(
+              activeBlog.title,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Text(
-                  format.parse(blog['date']).toString().substring(0, 10),
-                  style: TextStyle(color: Colors.grey),
+                  _formatDate(activeBlog.date),
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
-              blog['description'],
-              style: TextStyle(color: Colors.white),
+              activeBlog.description,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
           ],
         ),

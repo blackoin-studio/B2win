@@ -1,7 +1,19 @@
-const Blog = require("../models/Blog");
+const supabase = require("../utils/supabase");
 const upload = require("../utils/uploadSingle");
+const { uploadFileToSupabase } = require("../utils/supabaseStorage");
 
-// Create Blog
+const mapBlog = (blog) => ({
+  _id: blog.id,
+  id: blog.id,
+  title: blog.title,
+  description: blog.description,
+  photo: blog.photo,
+  date: blog.date,
+  createdAt: blog.created_at,
+  updatedAt: blog.updated_at,
+});
+
+// Create Blog (Uploads cover image to Supabase Storage)
 exports.createBlog = (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
@@ -12,23 +24,33 @@ exports.createBlog = (req, res) => {
 
     try {
       const { title, description } = req.body;
+      let photo = "no-away-photo.jpg";
 
-      // If logos are uploaded, use the file paths; else use default logos
-      // Get the uploaded image file paths
+      if (req.file) {
+        photo = await uploadFileToSupabase(req.file, "blogs");
+      }
 
-      const photo = req.file ? `${req.file.filename}` : "no-away-photo.jpg";
+      const { data: newBlog, error } = await supabase
+        .from("blogs")
+        .insert({
+          title: title || "Untitled Blog",
+          description: description || "",
+          photo,
+        })
+        .select()
+        .single();
 
-      const newBlog = new Blog({
-        title,
-        description,
-        photo,
-      });
+      if (error) {
+        return res
+          .status(500)
+          .json({ message: "Error creating Blog", error: error.message });
+      }
 
-      await newBlog.save(); // Save Blog to the database
-
-      res.status(201).json(newBlog); // Respond with the created Blog
+      res.status(201).json(mapBlog(newBlog));
     } catch (error) {
-      res.status(500).json({ message: "Error creating Blog", error });
+      res
+        .status(500)
+        .json({ message: "Error creating Blog", error: error.message });
     }
   });
 };
@@ -36,8 +58,18 @@ exports.createBlog = (req, res) => {
 // Get all Blogs
 exports.getAllBlogs = async (req, res) => {
   try {
-    const Blogs = await Blog.find({});
-    res.status(200).json(Blogs);
+    const { data: blogs, error } = await supabase
+      .from("blogs")
+      .select("*")
+      .order("date", { ascending: false });
+
+    if (error) {
+      return res
+        .status(500)
+        .json({ message: "Error fetching Blogs", error: error.message });
+    }
+
+    res.status(200).json((blogs || []).map(mapBlog));
   } catch (error) {
     res
       .status(500)
@@ -48,11 +80,17 @@ exports.getAllBlogs = async (req, res) => {
 // Get a specific Blog by ID
 exports.getBlogById = async (req, res) => {
   try {
-    const Blog = await Blog.findById(req.params.id);
-    if (!Blog) {
+    const { data: blog, error } = await supabase
+      .from("blogs")
+      .select("*")
+      .eq("id", req.params.id)
+      .maybeSingle();
+
+    if (error || !blog) {
       return res.status(404).json({ message: "Blog not found" });
     }
-    res.status(200).json(Blog);
+
+    res.status(200).json(mapBlog(blog));
   } catch (error) {
     res
       .status(500)
@@ -60,44 +98,76 @@ exports.getBlogById = async (req, res) => {
   }
 };
 
-// Update a Blog by ID
-exports.updateBlog = async (req, res) => {
-  try {
-    const { date, title, description, photo } = req.body;
+// Update a Blog by ID (Supports both JSON body and multipart FormData cover image update)
+exports.updateBlog = (req, res) => {
+  const isMultipart = (req.headers["content-type"] || "").includes(
+    "multipart/form-data"
+  );
 
-    const updatedBlog = await Blog.findByIdAndUpdate(
-      req.params.id,
-      {
-        date,
-        title,
-        description,
-        photo,
-      },
-      { new: true }
-    );
+  const handleUpdate = async () => {
+    try {
+      const { date, title, description, photo } = req.body;
+      const updatePayload = {};
 
-    if (!updatedBlog) {
-      return res.status(404).json({ message: "Blog not found" });
+      if (date !== undefined) updatePayload.date = date;
+      if (title !== undefined) updatePayload.title = title;
+      if (description !== undefined) updatePayload.description = description;
+      if (photo !== undefined) updatePayload.photo = photo;
+
+      if (req.file) {
+        updatePayload.photo = await uploadFileToSupabase(req.file, "blogs");
+      }
+
+      const { data: updatedBlog, error } = await supabase
+        .from("blogs")
+        .update(updatePayload)
+        .eq("id", req.params.id)
+        .select()
+        .maybeSingle();
+
+      if (error || !updatedBlog) {
+        return res.status(404).json({ message: "Blog not found" });
+      }
+
+      res.status(200).json({
+        message: "Blog updated successfully",
+        Blog: mapBlog(updatedBlog),
+      });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Error updating Blog", error: error.message });
     }
+  };
 
-    res.status(200).json({
-      message: "Blog updated successfully",
-      Blog: updatedBlog,
+  if (isMultipart) {
+    upload(req, res, (err) => {
+      if (err) {
+        return res
+          .status(400)
+          .json({ message: "Error uploading file", error: err.message });
+      }
+      handleUpdate();
     });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating Blog", error: error.message });
+  } else {
+    handleUpdate();
   }
 };
 
 // Delete a Blog by ID
 exports.deleteBlog = async (req, res) => {
   try {
-    const deletedBlog = await Blog.findByIdAndDelete(req.params.id);
-    if (!deletedBlog) {
+    const { data: deletedBlog, error } = await supabase
+      .from("blogs")
+      .delete()
+      .eq("id", req.params.id)
+      .select("id")
+      .maybeSingle();
+
+    if (error || !deletedBlog) {
       return res.status(404).json({ message: "Blog not found" });
     }
+
     res.status(200).json({ message: "Blog deleted successfully" });
   } catch (error) {
     res

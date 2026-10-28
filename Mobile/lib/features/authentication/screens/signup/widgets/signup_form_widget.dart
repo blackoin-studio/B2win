@@ -14,7 +14,7 @@ class SignUpFormWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(SignUpController());
+    final controller = Get.find<SignUpController>();
     return Container(
       padding: const EdgeInsets.only(top: formHeight - 15, bottom: formHeight),
       child: Form(
@@ -63,14 +63,11 @@ class SignUpFormWidget extends StatelessWidget {
             const SizedBox(height: formHeight - 10),
             Obx(
               () => TPrimaryButton(
-                isLoading: controller.isLoading.value ? true : false,
+                isLoading: controller.isLoading.value,
                 text: tSignup.tr,
-                onPressed: controller.isFacebookLoading.value ||
-                        controller.isGoogleLoading.value
-                    ? () {}
-                    : controller.isLoading.value
-                        ? () {}
-                        : () => controller.createUser(),
+                onPressed: () {
+                  controller.createUser();
+                },
               ),
             ),
           ],

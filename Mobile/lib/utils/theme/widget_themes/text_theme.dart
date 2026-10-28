@@ -15,7 +15,7 @@ class TTextTheme {
     headlineSmall: GoogleFonts.poppins(fontSize: 18.0, fontWeight: FontWeight.normal, color: tDarkColor),
     titleLarge: GoogleFonts.poppins(fontSize: 14.0, fontWeight: FontWeight.w600, color: tDarkColor),
     bodyLarge: GoogleFonts.poppins(fontSize: 14.0, color: tDarkColor),
-    bodyMedium: GoogleFonts.poppins(fontSize: 14.0, color: tDarkColor.withOpacity(0.8)),
+    bodyMedium: GoogleFonts.poppins(fontSize: 14.0, color: tDarkColor.withValues(alpha: 0.8)),
   );
 
   /* -- Dark Text Theme -- */
@@ -27,6 +27,6 @@ class TTextTheme {
     headlineSmall: GoogleFonts.poppins(fontSize: 18.0, fontWeight: FontWeight.normal, color: tWhiteColor),
     titleLarge: GoogleFonts.poppins(fontSize: 14.0, fontWeight: FontWeight.w600, color: tWhiteColor),
     bodyLarge: GoogleFonts.poppins(fontSize: 14.0, color: tWhiteColor),
-    bodyMedium: GoogleFonts.poppins(fontSize: 14.0, color: tWhiteColor.withOpacity(0.8)),
+    bodyMedium: GoogleFonts.poppins(fontSize: 14.0, color: tWhiteColor.withValues(alpha: 0.8)),
   );
 }

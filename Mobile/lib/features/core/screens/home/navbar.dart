@@ -12,7 +12,7 @@ class Navbar extends StatelessWidget {
   });
 
   final bool isDark;
-  final NavbarController controller = Get.put(NavbarController());
+  final NavbarController controller = Get.find<NavbarController>();
 
   @override
   Widget build(context) {

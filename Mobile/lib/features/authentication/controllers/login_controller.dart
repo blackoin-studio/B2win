@@ -1,103 +1,129 @@
-import 'dart:convert';
-
-import 'package:b2win/constants/api_config.dart';
-import 'package:b2win/features/core/screens/home/home_screen.dart';
+import 'package:b2win/core/network/api_exceptions.dart';
+import 'package:b2win/data/repositories/auth_repository.dart';
+import 'package:b2win/routes/app_routes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../constants/text_strings.dart';
 import '../../../utils/helper/helper_controller.dart';
 
 class LoginController extends GetxController {
   static LoginController get instance => Get.find();
-  final storage = const FlutterSecureStorage();
 
-  /// TextField Controllers to get data from TextFields
+  final AuthRepository _authRepository;
+
+  LoginController({AuthRepository? authRepository})
+      : _authRepository = authRepository ?? AuthRepository();
+
+  /// TextField Controllers & State
   final showPassword = false.obs;
   final email = TextEditingController();
   final password = TextEditingController();
-  GlobalKey<FormState> loginFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> loginFormKey = GlobalKey<FormState>();
 
   /// Loader
   final isLoading = false.obs;
-  final isGoogleLoading = false.obs;
-  final isFacebookLoading = false.obs;
 
-  /// Login User
+  @override
+  void onClose() {
+    email.dispose();
+    password.dispose();
+    super.onClose();
+  }
+
+  /// Login User via Supabase Auth
   Future<void> login() async {
-    isLoading.value = true;
     if (!loginFormKey.currentState!.validate()) {
-      isLoading.value = false;
       return;
     }
 
-    // Trim users input
-    final email = this.email.text.trim();
-    final password = this.password.text.trim();
+    try {
+      isLoading.value = true;
+      final trimmedEmail = email.text.trim();
+      final trimmedPassword = password.text.trim();
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/users/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
-    );
+      await _authRepository.login(
+        email: trimmedEmail,
+        password: trimmedPassword,
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      await storage.write(key: 'token', value: data['token']);
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setBool("loggedIn", true);
-      Get.off(() => const HomeScreen());
-      return;
-    } else {
-      final error = jsonDecode(response.body)['error'];
+      Get.offAllNamed(AppRoutes.home);
+    } on ApiException catch (e) {
+      Helper.errorSnackBar(title: tOhSnap, message: e.message);
+    } catch (e) {
+      Helper.errorSnackBar(title: tOhSnap, message: e.toString());
+    } finally {
       isLoading.value = false;
-      Helper.errorSnackBar(title: tOhSnap, message: error.toString());
+    }
+  }
+
+  /// Send Forgot Password Email via Supabase Auth
+  Future<void> forgotPassword() async {
+    final trimmedEmail = email.text.trim();
+    if (trimmedEmail.isEmpty) {
+      Helper.warningSnackBar(
+        title: 'Email Required',
+        message: 'Please enter your email address first.',
+      );
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      final msg = await _authRepository.forgotPassword(trimmedEmail);
+      Helper.successSnackBar(title: 'Reset Email Sent', message: msg);
+    } on ApiException catch (e) {
+      Helper.errorSnackBar(title: tOhSnap, message: e.message);
+    } catch (e) {
+      Helper.errorSnackBar(title: tOhSnap, message: e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Resend Confirmation Email via Supabase Auth
+  Future<void> resendConfirmationEmail() async {
+    final trimmedEmail = email.text.trim();
+    if (trimmedEmail.isEmpty) {
+      Helper.warningSnackBar(
+        title: 'Email Required',
+        message: 'Please enter your email address to resend confirmation.',
+      );
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      final msg = await _authRepository.resendConfirmation(trimmedEmail);
+      Helper.successSnackBar(title: 'Confirmation Sent', message: msg);
+    } on ApiException catch (e) {
+      Helper.errorSnackBar(title: tOhSnap, message: e.message);
+    } catch (e) {
+      Helper.errorSnackBar(title: tOhSnap, message: e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Initiate Supabase Google OAuth Sign-In
+  Future<void> signInWithGoogle() async {
+    try {
+      isLoading.value = true;
+      final oauthUrl = await _authRepository.getGoogleSignInUrl();
+      final uri = Uri.parse(oauthUrl);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        Helper.errorSnackBar(
+          title: tOhSnap,
+          message: 'Could not launch Google Sign-In browser.',
+        );
+      }
+    } on ApiException catch (e) {
+      Helper.errorSnackBar(title: tOhSnap, message: e.message);
+    } catch (e) {
+      Helper.errorSnackBar(title: tOhSnap, message: e.toString());
+    } finally {
+      isLoading.value = false;
     }
   }
 }
-
-  /// [GoogleSignInAuthentication]
-  // Future<void> googleSignIn() async {
-  //   try {
-  //     isGoogleLoading.value = true;
-  //     final auth = AuthenticationRepository.instance;
-  //     // Sign In with Google
-  //     await auth.signInWithGoogle();
-  //     // Once the user Signed In, Check if the User Data is already stored in Firestore Collection('Users')
-  //     // If not store the data and let the user Login.
-  //     // [auth.getUserEmail] will return current LoggedIn user email.
-  //     // If record does not exit -> Create new
-  //     /// --  In this case or any case do not store password in the Firestore. This is just for learning purpose.
-  //     if(!await UserRepository.instance.recordExist(auth.getUserEmail)) {
-  //       UserModel user = UserModel(email: auth.getUserEmail, password: '', fullName: auth.getDisplayName, phoneNo: auth.getPhoneNo);
-  //       await UserRepository.instance.createUser(user);
-  //     }
-  //     isGoogleLoading.value = false;
-  //     auth.setInitialScreen(auth.firebaseUser);
-  //   } catch (e) {
-  //     isGoogleLoading.value = false;
-  //     Helper.errorSnackBar(title: tOhSnap, message: e.toString());
-  //   }
-  // }
-
-  /// [FacebookSignInAuthentication]
-  // Future<void> facebookSignIn() async {
-  //   try {
-  //     isFacebookLoading.value = true;
-  //     final auth = AuthenticationRepository.instance;
-  //     await auth.signInWithFacebook();
-  //     /// --  In this case or any case do not store password in the Firestore. This is just for learning purpose.
-  //     if(!await UserRepository.instance.recordExist(auth.getUserID)) {
-  //       UserModel user = UserModel(email: auth.getUserEmail, password: '', fullName: auth.getDisplayName, phoneNo: auth.getPhoneNo);
-  //       await UserRepository.instance.createUser(user);
-  //     }
-  //     isFacebookLoading.value = false;
-  //   } catch (e) {
-  //     isFacebookLoading.value = false;
-  //     Helper.errorSnackBar(title: tOhSnap, message: e.toString());
-  //   }
-  // }
-
