@@ -1,0 +1,40 @@
+services:
+  # 1. Node.js Express Backend API & Public Landing Page
+  - type: web
+    name: b2win-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: SUPABASE_STORAGE_BUCKET
+        value: b2win-media
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AUTH_REDIRECT_URL
+        value: https://b2win-qgvn.onrender.com/api/v1/users/confirm
+
+  # 2. Dedicated React + Vite Admin Dashboard (Static Site)
+  - type: web
+    name: b2win-admin
+    runtime: static
+    rootDir: AdminFrontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_ORIGIN
+        value: https://b2win-qgvn.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
