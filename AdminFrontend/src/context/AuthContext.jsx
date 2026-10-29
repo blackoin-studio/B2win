@@ -93,7 +93,7 @@ export function AuthProvider({ children }) {
 
   async function loginWithGoogle() {
     setOauthError("");
-    const redirectTo = window.location.origin;
+    const redirectTo = `${window.location.origin}${window.location.pathname}`;
     const data = await apiRequest(
       `/users/oauth/google?redirectTo=${encodeURIComponent(redirectTo)}`
     );

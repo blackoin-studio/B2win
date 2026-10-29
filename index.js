@@ -32,14 +32,28 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
+const adminDistDir = path.resolve(__dirname, "AdminFrontend", "dist");
+
 app.use("/public", express.static(uploadDir));
+app.use("/admin", express.static(adminDistDir));
 app.use("/", express.static(uploadDir));
 
 app.use("/api/v1/users", users);
 app.use("/api/v1/blogs", blogs);
 app.use("/api/v1/predictions", predictions);
 
-// Render Landing Page
+// Render Dedicated React Admin Dashboard at /admin
+app.get(["/admin", "/admin/*"], (req, res) => {
+  const adminIndex = path.join(adminDistDir, "index.html");
+  if (fs.existsSync(adminIndex)) {
+    return res.sendFile("index.html", { root: adminDistDir });
+  }
+  return res
+    .status(503)
+    .send("AdminFrontend build not found. Run: npm run build");
+});
+
+// Render Public Landing Page at /
 app.get("/", (req, res) => {
   res.sendFile("index.html", { root: uploadDir });
 });

@@ -1,5 +1,5 @@
 services:
-  # 1. Node.js Express Backend API & Public Landing Page
+  # 1. Node.js Express Backend API, Landing Page (/), and Admin Dashboard (/admin)
   - type: web
     name: b2win-api
     runtime: node
@@ -24,12 +24,12 @@ services:
       - key: AUTH_REDIRECT_URL
         value: https://b2win-qgvn.onrender.com/api/v1/users/confirm
 
-  # 2. Dedicated React + Vite Admin Dashboard (Static Site)
+  # 2. Optional Standalone Static Site for AdminFrontend
   - type: web
     name: b2win-admin
     runtime: static
     rootDir: AdminFrontend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     staticPublishPath: dist
     envVars:
       - key: VITE_API_ORIGIN

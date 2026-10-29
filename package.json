@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production node index",
-    "dev": "nodemon index"
+    "dev": "nodemon index",
+    "build": "npm --prefix AdminFrontend install --include=dev && npm --prefix AdminFrontend run build",
+    "postinstall": "npm run build"
   },
   "repository": {
     "type": "git",
