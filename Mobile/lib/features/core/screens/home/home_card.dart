@@ -1,7 +1,9 @@
+import 'package:b2win/common_widgets/ads/dynamic_banner_ad_widget.dart';
 import 'package:b2win/common_widgets/loaders/empty_state_widget.dart';
 import 'package:b2win/common_widgets/loaders/match_card_shimmer.dart';
 import 'package:b2win/constants/api_config.dart';
 import 'package:b2win/data/models/prediction_model.dart';
+import 'package:b2win/features/core/controllers/ad_controller.dart';
 import 'package:b2win/features/core/controllers/prediction_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -135,7 +137,12 @@ class MatchCard extends StatelessWidget {
             }
 
             return RefreshIndicator(
-              onRefresh: () => controller.fetchGameData(),
+              onRefresh: () async {
+                if (Get.isRegistered<AdController>()) {
+                  Get.find<AdController>().fetchAdSettings();
+                }
+                await controller.fetchGameData();
+              },
               child: ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -277,6 +284,7 @@ class MatchCard extends StatelessWidget {
             );
           }),
         ),
+        const DynamicBannerAdWidget(placement: 'home'),
       ],
     );
   }

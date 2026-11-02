@@ -1,3 +1,4 @@
+import 'package:b2win/common_widgets/ads/dynamic_banner_ad_widget.dart';
 import 'package:b2win/constants/api_config.dart';
 import 'package:b2win/data/models/blog_model.dart';
 import 'package:flutter/material.dart';
@@ -84,6 +85,8 @@ class BlogDetailsScreen extends StatelessWidget {
               activeBlog.description,
               style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
+            const SizedBox(height: 24),
+            const DynamicBannerAdWidget(placement: 'blog'),
           ],
         ),
       ),

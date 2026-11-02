@@ -8,12 +8,14 @@ import {
   XCircle,
   Clock,
   ArrowRight,
+  Megaphone,
 } from "lucide-react";
 
 export default function OverviewTab({
   predictions,
   blogs,
   users,
+  adSettings,
   onNavigate,
   onQuickStatusChange,
 }) {
@@ -77,6 +79,34 @@ export default function OverviewTab({
           </div>
           <strong className="kpi-value">{users.length}</strong>
           <span className="kpi-sub">{adminCount} active administrators</span>
+        </div>
+
+        <div
+          className="kpi-card"
+          onClick={() => onNavigate("ads")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="kpi-top">
+            <span className="kpi-label">Mobile Google Ads</span>
+            <Megaphone
+              size={18}
+              className={adSettings?.adsEnabled ? "text-emerald" : "text-red"}
+            />
+          </div>
+          <strong
+            className={`kpi-value ${
+              adSettings?.adsEnabled ? "text-emerald" : ""
+            }`}
+          >
+            {adSettings?.adsEnabled ? "ENABLED" : "OFF"}
+          </strong>
+          <span className="kpi-sub">
+            {adSettings?.adsEnabled
+              ? adSettings?.testMode
+                ? "Test ads active · Click to configure"
+                : "Live AdMob units · Click to configure"
+              : "Click to turn on AdMob monetization"}
+          </span>
         </div>
       </div>
 

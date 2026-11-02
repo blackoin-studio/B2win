@@ -4,6 +4,7 @@ import {
   Trophy,
   Newspaper,
   Users,
+  Megaphone,
   LogOut,
   RefreshCw,
 } from "lucide-react";
@@ -32,6 +33,12 @@ export default function Sidebar({
       label: "Users & Roles",
       icon: Users,
       count: counts.users,
+    },
+    {
+      id: "ads",
+      label: "Google Ads",
+      icon: Megaphone,
+      count: counts.adsStatus,
     },
   ];
 

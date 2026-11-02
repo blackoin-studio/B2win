@@ -154,3 +154,29 @@ CREATE POLICY "Admin manage blogs" ON public.blogs
 DROP POLICY IF EXISTS "Admin manage predictions" ON public.predictions;
 CREATE POLICY "Admin manage predictions" ON public.predictions
     FOR ALL USING (COALESCE((auth.jwt()->'app_metadata'->>'is_admin')::BOOLEAN, FALSE) = TRUE);
+
+-- ============================================================================
+-- 7. APP SETTINGS TABLE (Dynamic Admin Controls: Google Ads / AdMob, etc.)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.app_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL DEFAULT '{}'::jsonb,
+    updated_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+DROP TRIGGER IF EXISTS update_app_settings_updated_at ON public.app_settings;
+CREATE TRIGGER update_app_settings_updated_at
+    BEFORE UPDATE ON public.app_settings
+    FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read app_settings" ON public.app_settings;
+CREATE POLICY "Public read app_settings" ON public.app_settings
+    FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Admin manage app_settings" ON public.app_settings;
+CREATE POLICY "Admin manage app_settings" ON public.app_settings
+    FOR ALL USING (COALESCE((auth.jwt()->'app_metadata'->>'is_admin')::BOOLEAN, FALSE) = TRUE);

@@ -7,6 +7,7 @@ import OverviewTab from "./components/OverviewTab";
 import PredictionsTab from "./components/PredictionsTab";
 import BlogsTab from "./components/BlogsTab";
 import UsersTab from "./components/UsersTab";
+import AdsTab from "./components/AdsTab";
 
 export default function App() {
   const { admin, loading } = useAuth();
@@ -14,6 +15,7 @@ export default function App() {
   const [predictions, setPredictions] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [users, setUsers] = useState([]);
+  const [adSettings, setAdSettings] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [toasts, setToasts] = useState([]);
 
@@ -29,14 +31,18 @@ export default function App() {
     if (!admin) return;
     setRefreshing(true);
     try {
-      const [predsData, blogsData, usersData] = await Promise.all([
+      const [predsData, blogsData, usersData, adsData] = await Promise.all([
         apiRequest("/predictions"),
         apiRequest("/blogs"),
         apiRequest("/users"),
+        apiRequest("/settings/ads").catch(() => null),
       ]);
       setPredictions(Array.isArray(predsData) ? predsData : []);
       setBlogs(Array.isArray(blogsData) ? blogsData : []);
       setUsers(Array.isArray(usersData?.data) ? usersData.data : []);
+      if (adsData?.data) {
+        setAdSettings(adsData.data);
+      }
     } catch (err) {
       showToast(err.message || "Failed to load dashboard data", true);
     } finally {
@@ -94,6 +100,7 @@ export default function App() {
           predictions: predictions.length,
           blogs: blogs.length,
           users: users.length,
+          adsStatus: adSettings?.adsEnabled ? "ON" : "OFF",
         }}
         onRefresh={loadAllData}
         refreshing={refreshing}
@@ -105,6 +112,7 @@ export default function App() {
             predictions={predictions}
             blogs={blogs}
             users={users}
+            adSettings={adSettings}
             onNavigate={setActiveTab}
             onQuickStatusChange={handleQuickStatusChange}
           />
@@ -129,6 +137,14 @@ export default function App() {
         {activeTab === "users" && (
           <UsersTab
             users={users}
+            onReload={loadAllData}
+            showToast={showToast}
+          />
+        )}
+
+        {activeTab === "ads" && (
+          <AdsTab
+            adSettings={adSettings}
             onReload={loadAllData}
             showToast={showToast}
           />

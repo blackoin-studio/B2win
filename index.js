@@ -5,6 +5,7 @@ const dotenv = require("dotenv").config({ path: "./config.env" });
 const users = require("./Api/routes/users");
 const blogs = require("./Api/routes/blogs");
 const predictions = require("./Api/routes/predictions");
+const settings = require("./Api/routes/settings");
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use("/", express.static(uploadDir));
 app.use("/api/v1/users", users);
 app.use("/api/v1/blogs", blogs);
 app.use("/api/v1/predictions", predictions);
+app.use("/api/v1/settings", settings);
 
 // Render Dedicated React Admin Dashboard at /admin
 app.get(["/admin", "/admin/*"], (req, res) => {

@@ -1,7 +1,9 @@
+import 'package:b2win/common_widgets/ads/dynamic_banner_ad_widget.dart';
 import 'package:b2win/common_widgets/loaders/blog_card_shimmer.dart';
 import 'package:b2win/common_widgets/loaders/empty_state_widget.dart';
 import 'package:b2win/constants/api_config.dart';
 import 'package:b2win/data/models/blog_model.dart';
+import 'package:b2win/features/core/controllers/ad_controller.dart';
 import 'package:b2win/features/core/controllers/blog_controller.dart';
 import 'package:b2win/features/core/controllers/profile_controller.dart';
 import 'package:b2win/routes/app_routes.dart';
@@ -100,7 +102,12 @@ class BlogScreen extends StatelessWidget {
                 }
 
                 return RefreshIndicator(
-                  onRefresh: () => blogController.fetchBlogData(),
+                  onRefresh: () async {
+                    if (Get.isRegistered<AdController>()) {
+                      Get.find<AdController>().fetchAdSettings();
+                    }
+                    await blogController.fetchBlogData();
+                  },
                   child: ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: blogController.blogs.length,
@@ -112,6 +119,10 @@ class BlogScreen extends StatelessWidget {
                         date: _formatDate(blog.date),
                         photo: resolveMediaUrl(blog.photo),
                         onTap: () {
+                          if (Get.isRegistered<AdController>()) {
+                            Get.find<AdController>()
+                                .recordInteractionAndMaybeShowInterstitial();
+                          }
                           Get.toNamed(AppRoutes.blogDetails, arguments: blog);
                         },
                       );
@@ -120,6 +131,7 @@ class BlogScreen extends StatelessWidget {
                 );
               }),
             ),
+            const DynamicBannerAdWidget(placement: 'blog'),
           ],
         ),
       ),
