@@ -640,6 +640,146 @@ Return ONLY a JSON object with keys:
   }
 };
 
+// ============================================================================
+// 7. MOBILE APP: INTERACTIVE "ASK B2WIN AI TIPSTER" CHAT ASSISTANT
+// @route POST /api/v1/ai/chat
+// ============================================================================
+const chatWithAiTipster = async (req, res) => {
+  try {
+    const message = String(req.body?.message || "").trim();
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        error: "Please enter a question for B2win AI",
+      });
+    }
+
+    const [{ data: predictions = [] }, { data: blogs = [] }] =
+      await Promise.all([
+        supabase
+          .from("predictions")
+          .select("*")
+          .order("date", { ascending: false })
+          .limit(10),
+        supabase
+          .from("blogs")
+          .select("title, date")
+          .order("date", { ascending: false })
+          .limit(3),
+      ]);
+
+    const geminiResult = await callGeminiJson(
+      `User question: "${message}"
+Live B2win Predictions in database: ${JSON.stringify(
+        predictions.map((p) => ({
+          league: p.league,
+          match: `${p.home_team} vs ${p.away_team}`,
+          tip: p.tip,
+          odds: p.odds,
+          status: p.status,
+          time: p.time,
+        }))
+      )}
+Latest Blogs: ${JSON.stringify(blogs)}
+Answer concisely as B2win AI Tipster (2-4 short sentences or bullet points grounded in the live predictions above).
+Return ONLY a JSON object:
+{
+  "reply": "Your helpful response grounded in the live B2win predictions",
+  "suggestions": ["Follow-up question 1", "Follow-up question 2"]
+}`
+    );
+
+    if (geminiResult && geminiResult.reply) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          reply: geminiResult.reply,
+          suggestions: Array.isArray(geminiResult.suggestions)
+            ? geminiResult.suggestions.slice(0, 3)
+            : ["Safest picks today?", "Build a 3-match slip"],
+        },
+      });
+    }
+
+    // Grounded Conversational Fallback using live Supabase data
+    const lower = message.toLowerCase();
+    const scored = predictions.map((p) => {
+      const m = computeConfidenceMetrics(p.odds, p.tip);
+      return {
+        match: `${p.home_team} vs ${p.away_team}`,
+        league: p.league,
+        tip: p.tip,
+        odds: p.odds,
+        status: p.status || "pending",
+        confidence: m.confidence,
+        riskLevel: m.riskLevel,
+      };
+    });
+
+    const topPicks = [...scored]
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 3);
+
+    let reply = "";
+    if (lower.includes("safe") || lower.includes("best") || lower.includes("top")) {
+      const lines = topPicks
+        .map(
+          (p) =>
+            `• ${p.match} (${p.league}): Tip "${p.tip}" @${p.odds} (${p.confidence}% AI Confidence)`
+        )
+        .join("\n");
+      reply =
+        topPicks.length > 0
+          ? `Here are the highest-confidence selections on B2win right now:\n${lines}`
+          : "Check the Predictions tab for our latest match selections and confidence ratings.";
+    } else if (lower.includes("slip") || lower.includes("acca") || lower.includes("odds")) {
+      const combined = topPicks
+        .reduce((acc, p) => acc * (parseFloat(p.odds) || 1.6), 1)
+        .toFixed(2);
+      const names = topPicks.map((p) => `${p.match} (${p.tip})`).join(" + ");
+      reply =
+        topPicks.length > 0
+          ? `Recommended Smart Slip (@${combined} combined odds):\n${names}. You can also tap the "AI Smart Slip" chip on the Home screen to customize by risk level.`
+          : "Tap the 'AI Smart Slip' chip on the Home screen to build a custom accumulator.";
+    } else {
+      // Match specific team or league if mentioned
+      const matched = scored.find(
+        (p) =>
+          lower.includes(p.match.split(" vs ")[0].toLowerCase()) ||
+          lower.includes(p.match.split(" vs ")[1]?.toLowerCase() || "") ||
+          lower.includes((p.league || "").toLowerCase())
+      );
+      if (matched) {
+        reply = `For ${matched.match} (${matched.league}), B2win AI recommends "${matched.tip}" at @${matched.odds} with ${matched.confidence}% confidence (${matched.riskLevel}).`;
+      } else if (topPicks.length > 0) {
+        const first = topPicks[0];
+        reply = `Based on our live B2win model, our top spotlight fixture is ${first.match} (${first.league}) — Tip: "${first.tip}" @${first.odds} (${first.confidence}% AI Confidence). Ask me about safest picks, accumulator slips, or any team on the board!`;
+      } else {
+        reply =
+          "I'm your B2win AI Tipster! Ask me for today's safest picks, high-value odds, or a custom accumulator slip.";
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        reply,
+        suggestions: [
+          "What are the safest picks today?",
+          "Build a 3-match accumulator slip",
+          "Which match has the highest AI confidence?",
+        ],
+      },
+    });
+  } catch (error) {
+    console.error("AI chat error:", error.message);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to process AI chat message",
+    });
+  }
+};
+
 module.exports = {
   getOverviewInsights,
   generateAiBlog,
@@ -647,5 +787,6 @@ module.exports = {
   getMatchInsight,
   generateSmartSlip,
   summarizeBlog,
+  chatWithAiTipster,
 };
 

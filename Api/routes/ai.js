@@ -6,6 +6,7 @@ const {
   getMatchInsight,
   generateSmartSlip,
   summarizeBlog,
+  chatWithAiTipster,
 } = require("../controllers/ai");
 const { protect, adminOnly } = require("../middleware/auth");
 
@@ -20,6 +21,7 @@ router.post("/autofill-prediction", protect, adminOnly, autofillPrediction);
 router.post("/match-insight", getMatchInsight);
 router.post("/smart-slip", generateSmartSlip);
 router.post("/blog-summary", summarizeBlog);
+router.post("/chat", chatWithAiTipster);
 
 module.exports = router;
 

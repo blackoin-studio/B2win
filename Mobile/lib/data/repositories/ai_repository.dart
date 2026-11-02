@@ -255,5 +255,34 @@ class AiRepository {
           'Bottom Line: Compare these tactical insights with live match tips in the B2win Predictions tab.',
     );
   }
+
+  Future<String> askAiTipster({
+    required String message,
+    List<PredictionModel> availableGames = const [],
+  }) async {
+    try {
+      final res = await _provider.sendChatMessage(message: message);
+      if (res is Map<String, dynamic>) {
+        final data = res['data'] is Map<String, dynamic>
+            ? res['data'] as Map<String, dynamic>
+            : res;
+        final reply = data['reply']?.toString().trim() ?? '';
+        if (reply.isNotEmpty) return reply;
+      }
+    } catch (_) {}
+
+    if (availableGames.isNotEmpty) {
+      final sorted = [...availableGames]
+        ..sort((a, b) =>
+            computeConfidence(b.odds).compareTo(computeConfidence(a.odds)));
+      final top = sorted.take(2).map((g) {
+        final conf = computeConfidence(g.odds);
+        return '• ${g.homeTeam} vs ${g.awayTeam} (${g.league}): Tip "${g.tip}" @${g.odds} ($conf% AI Confidence)';
+      }).join('\n');
+      return 'Based on the active B2win board, here are our top-rated selections:\n$top';
+    }
+
+    return 'Ask me for today\'s safest picks, high-confidence Over 2.5 tips, or tap "AI Smart Slip" to build a custom accumulator!';
+  }
 }
 

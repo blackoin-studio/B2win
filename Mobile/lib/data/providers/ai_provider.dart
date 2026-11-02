@@ -50,5 +50,13 @@ class AiProvider {
       requireAuth: false,
     );
   }
+
+  Future<dynamic> sendChatMessage({required String message}) async {
+    return await _apiClient.post(
+      '/ai/chat',
+      body: {'message': message},
+      requireAuth: false,
+    );
+  }
 }
 
