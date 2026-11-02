@@ -4,9 +4,11 @@ import 'package:b2win/data/models/ad_settings_model.dart';
 import 'package:b2win/data/models/blog_model.dart';
 import 'package:b2win/data/models/prediction_model.dart';
 import 'package:b2win/data/providers/ad_settings_provider.dart';
+import 'package:b2win/data/providers/ai_provider.dart';
 import 'package:b2win/data/providers/blog_provider.dart';
 import 'package:b2win/data/providers/prediction_provider.dart';
 import 'package:b2win/data/repositories/ad_settings_repository.dart';
+import 'package:b2win/data/repositories/ai_repository.dart';
 import 'package:b2win/data/repositories/blog_repository.dart';
 import 'package:b2win/data/repositories/prediction_repository.dart';
 import 'package:b2win/features/core/controllers/ad_controller.dart';
@@ -255,6 +257,82 @@ void main() {
       );
     });
   });
+
+  group('B2win AI Features (AiRepository)', () {
+    test('computeConfidence and computeRiskLevel calibrate from odds', () {
+      expect(AiRepository.computeConfidence('1.50'), greaterThanOrEqualTo(70));
+      expect(AiRepository.computeRiskLevel('1.50'), 'Low Risk');
+      expect(AiRepository.computeRiskLevel('1.85'), 'Balanced Risk');
+      expect(AiRepository.computeRiskLevel('2.40'), 'High-Value Pick');
+    });
+
+    test('getMatchInsight, getSmartSlip, and getBlogSummary return structured AI output',
+        () async {
+      final aiRepo = AiRepository(provider: _OfflineAiProvider());
+      const sampleGame = PredictionModel(
+        id: '10',
+        league: 'Premier League',
+        date: '2026-11-02',
+        homeTeam: 'Arsenal',
+        awayTeam: 'Liverpool',
+        score: '-',
+        time: '20:00',
+        tip: 'Over 2.5',
+        odds: '1.75',
+        status: 'pending',
+      );
+
+      final insight = await aiRepo.getMatchInsight(sampleGame);
+      expect(insight.confidence, inInclusiveRange(56, 91));
+      expect(insight.bullets.length, 3);
+      expect(insight.verdict, contains('Over 2.5'));
+
+      final slip = await aiRepo.getSmartSlip(
+        riskProfile: 'safe',
+        availableGames: [sampleGame],
+      );
+      expect(slip.picks.length, 1);
+      expect(slip.combinedOdds, '1.75');
+
+      final summary = await aiRepo.getBlogSummary(
+        title: 'El Clasico Tactical Breakdown',
+        description:
+            'Real Madrid and Barcelona meet in a decisive clash. High pressing in midfield will dictate tempo. Expect goals in both halves.',
+      );
+      expect(summary.bullets.isNotEmpty, isTrue);
+      expect(summary.keyTakeaway, isNotEmpty);
+    });
+  });
+}
+
+class _OfflineAiProvider extends AiProvider {
+  _OfflineAiProvider() : super(apiClient: ApiClient());
+
+  @override
+  Future<dynamic> fetchMatchInsight({
+    required String homeTeam,
+    required String awayTeam,
+    required String league,
+    required String tip,
+    required String odds,
+    required String status,
+    required String score,
+  }) async {
+    throw NetworkException();
+  }
+
+  @override
+  Future<dynamic> fetchSmartSlip({String riskProfile = 'balanced'}) async {
+    throw NetworkException();
+  }
+
+  @override
+  Future<dynamic> fetchBlogSummary({
+    required String title,
+    required String description,
+  }) async {
+    throw NetworkException();
+  }
 }
 
 class _FakeAdSettingsProvider extends AdSettingsProvider {

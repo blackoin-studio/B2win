@@ -6,6 +6,7 @@ const users = require("./Api/routes/users");
 const blogs = require("./Api/routes/blogs");
 const predictions = require("./Api/routes/predictions");
 const settings = require("./Api/routes/settings");
+const ai = require("./Api/routes/ai");
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/v1/users", users);
 app.use("/api/v1/blogs", blogs);
 app.use("/api/v1/predictions", predictions);
 app.use("/api/v1/settings", settings);
+app.use("/api/v1/ai", ai);
 
 // Render Dedicated React Admin Dashboard at /admin
 app.get(["/admin", "/admin/*"], (req, res) => {

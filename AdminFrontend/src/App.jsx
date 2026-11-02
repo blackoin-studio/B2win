@@ -16,6 +16,7 @@ export default function App() {
   const [blogs, setBlogs] = useState([]);
   const [users, setUsers] = useState([]);
   const [adSettings, setAdSettings] = useState(null);
+  const [aiInsights, setAiInsights] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [toasts, setToasts] = useState([]);
 
@@ -31,17 +32,22 @@ export default function App() {
     if (!admin) return;
     setRefreshing(true);
     try {
-      const [predsData, blogsData, usersData, adsData] = await Promise.all([
-        apiRequest("/predictions"),
-        apiRequest("/blogs"),
-        apiRequest("/users"),
-        apiRequest("/settings/ads").catch(() => null),
-      ]);
+      const [predsData, blogsData, usersData, adsData, aiData] =
+        await Promise.all([
+          apiRequest("/predictions"),
+          apiRequest("/blogs"),
+          apiRequest("/users"),
+          apiRequest("/settings/ads").catch(() => null),
+          apiRequest("/ai/overview-insights").catch(() => null),
+        ]);
       setPredictions(Array.isArray(predsData) ? predsData : []);
       setBlogs(Array.isArray(blogsData) ? blogsData : []);
       setUsers(Array.isArray(usersData?.data) ? usersData.data : []);
       if (adsData?.data) {
         setAdSettings(adsData.data);
+      }
+      if (aiData?.data) {
+        setAiInsights(aiData.data);
       }
     } catch (err) {
       showToast(err.message || "Failed to load dashboard data", true);
@@ -113,6 +119,7 @@ export default function App() {
             blogs={blogs}
             users={users}
             adSettings={adSettings}
+            aiInsights={aiInsights}
             onNavigate={setActiveTab}
             onQuickStatusChange={handleQuickStatusChange}
           />

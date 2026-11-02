@@ -9,6 +9,7 @@ import {
   Clock,
   ArrowRight,
   Megaphone,
+  Sparkles,
 } from "lucide-react";
 
 export default function OverviewTab({
@@ -16,6 +17,7 @@ export default function OverviewTab({
   blogs,
   users,
   adSettings,
+  aiInsights,
   onNavigate,
   onQuickStatusChange,
 }) {
@@ -109,6 +111,49 @@ export default function OverviewTab({
           </span>
         </div>
       </div>
+
+      {/* AI Performance & Strategy Insights Card */}
+      {aiInsights && (
+        <section
+          className="card-panel"
+          style={{
+            marginBottom: "1.5rem",
+            border: "1px solid rgba(225, 29, 72, 0.35)",
+            background:
+              "linear-gradient(135deg, rgba(225, 29, 72, 0.10), rgba(15, 23, 42, 0.92))",
+          }}
+        >
+          <div className="card-panel-header">
+            <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Sparkles size={18} className="text-red" />
+              <span>B2win AI Performance &amp; Tipster Insights</span>
+            </h3>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <span className="badge badge-won">
+                Best League: {aiInsights.topLeague?.name} (
+                {aiInsights.topLeague?.winRate}%)
+              </span>
+              <span className="badge badge-pending">
+                Best Market: {aiInsights.topMarket?.name} (
+                {aiInsights.topMarket?.winRate}%)
+              </span>
+              <span className="badge badge-neutral">
+                Avg Odds: @{aiInsights.averageOdds}
+              </span>
+            </div>
+          </div>
+
+          <div className="mini-list">
+            {(aiInsights.recommendations || []).map((rec, idx) => (
+              <div key={idx} className="mini-list-item">
+                <div className="mini-item-sub" style={{ color: "#e2e8f0" }}>
+                  &bull; {rec}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Split Panels */}
       <div className="overview-grid">

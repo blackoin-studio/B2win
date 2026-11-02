@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Search, Edit2, Trash2, X } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, X, Sparkles } from "lucide-react";
 import { apiRequest, resolveImageUrl } from "../services/api";
 
 const EMPTY_FORM = {
@@ -20,6 +20,9 @@ export default function PredictionsTab({ predictions, onReload, showToast }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiRationale, setAiRationale] = useState("");
   const [form, setForm] = useState(EMPTY_FORM);
   const [files, setFiles] = useState({
     leagueLogo: null,
@@ -46,8 +49,41 @@ export default function PredictionsTab({ predictions, onReload, showToast }) {
       ...EMPTY_FORM,
       date: new Date().toISOString().slice(0, 10),
     });
+    setAiPrompt("");
+    setAiRationale("");
     setFiles({ leagueLogo: null, homeLogo: null, awayLogo: null });
     setModalOpen(true);
+  }
+
+  async function handleAiAutofill() {
+    if (!aiPrompt.trim()) {
+      showToast("Enter a fixture first (e.g., Arsenal vs Chelsea 20:00)", true);
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await apiRequest("/ai/autofill-prediction", {
+        method: "POST",
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+      if (res?.data) {
+        setForm((prev) => ({
+          ...prev,
+          league: res.data.league || prev.league,
+          homeTeam: res.data.homeTeam || prev.homeTeam,
+          awayTeam: res.data.awayTeam || prev.awayTeam,
+          time: res.data.time || prev.time,
+          tip: res.data.tip || prev.tip,
+          odds: res.data.odds || prev.odds,
+        }));
+        setAiRationale(res.data.rationale || "");
+        showToast("AI populated fixture & suggested tip!");
+      }
+    } catch (err) {
+      showToast(err.message || "AI auto-fill failed", true);
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   function openEdit(pred) {
@@ -270,6 +306,60 @@ export default function PredictionsTab({ predictions, onReload, showToast }) {
             </div>
 
             <form onSubmit={handleSubmit} className="modal-form">
+              {/* AI Quick-Fill Fixture Bar */}
+              <div
+                style={{
+                  padding: "0.85rem 1rem",
+                  borderRadius: 12,
+                  marginBottom: "1rem",
+                  background: "rgba(225, 29, 72, 0.09)",
+                  border: "1px solid rgba(225, 29, 72, 0.3)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    fontSize: "0.86rem",
+                    color: "#fda4af",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  <Sparkles size={15} />
+                  <strong>AI Fixture Auto-Fill &amp; Tip Predictor</strong>
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <input
+                    type="text"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="Type e.g. Real Madrid vs Barcelona La Liga 21:00"
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    disabled={aiLoading}
+                    onClick={handleAiAutofill}
+                    className="btn btn-primary btn-sm"
+                  >
+                    <Sparkles size={14} />
+                    <span>{aiLoading ? "Analyzing..." : "AI Auto-Fill"}</span>
+                  </button>
+                </div>
+                {aiRationale && (
+                  <p
+                    style={{
+                      margin: "0.5rem 0 0",
+                      fontSize: "0.8rem",
+                      color: "#cbd5e1",
+                    }}
+                  >
+                    {aiRationale}
+                  </p>
+                )}
+              </div>
+
               <div className="form-row">
                 <div className="form-group">
                   <label>League *</label>

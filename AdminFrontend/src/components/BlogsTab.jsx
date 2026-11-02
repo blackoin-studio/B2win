@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Plus, Search, Edit2, Trash2, X } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, X, Sparkles } from "lucide-react";
 import { apiRequest, resolveImageUrl } from "../services/api";
 
 export default function BlogsTab({ blogs, onReload, showToast }) {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generatingAi, setGeneratingAi] = useState(false);
+  const [aiTopic, setAiTopic] = useState("");
   const [form, setForm] = useState({ id: "", title: "", description: "" });
   const [photoFile, setPhotoFile] = useState(null);
 
@@ -20,8 +22,34 @@ export default function BlogsTab({ blogs, onReload, showToast }) {
 
   function openCreate() {
     setForm({ id: "", title: "", description: "" });
+    setAiTopic("");
     setPhotoFile(null);
     setModalOpen(true);
+  }
+
+  async function handleGenerateAiBlog(useActivePredictions = false) {
+    setGeneratingAi(true);
+    try {
+      const res = await apiRequest("/ai/generate-blog", {
+        method: "POST",
+        body: JSON.stringify({
+          topic: aiTopic,
+          useActivePredictions,
+        }),
+      });
+      if (res?.data) {
+        setForm((prev) => ({
+          ...prev,
+          title: res.data.title || prev.title,
+          description: res.data.description || prev.description,
+        }));
+        showToast("AI drafted blog headline & article body!");
+      }
+    } catch (err) {
+      showToast(err.message || "AI generation failed", true);
+    } finally {
+      setGeneratingAi(false);
+    }
   }
 
   function openEdit(blog) {
@@ -194,6 +222,72 @@ export default function BlogsTab({ blogs, onReload, showToast }) {
             </div>
 
             <form onSubmit={handleSubmit} className="modal-form">
+              {/* 1-Click AI Article Generator Bar */}
+              <div
+                style={{
+                  padding: "0.9rem 1rem",
+                  borderRadius: 12,
+                  marginBottom: "1rem",
+                  background: "rgba(225, 29, 72, 0.09)",
+                  border: "1px solid rgba(225, 29, 72, 0.3)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "0.5rem",
+                    marginBottom: "0.6rem",
+                  }}
+                >
+                  <strong
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.4rem",
+                      fontSize: "0.88rem",
+                      color: "#fda4af",
+                    }}
+                  >
+                    <Sparkles size={15} />
+                    <span>B2win AI Article Co-Pilot</span>
+                  </strong>
+                  <button
+                    type="button"
+                    disabled={generatingAi}
+                    onClick={() => handleGenerateAiBlog(true)}
+                    className="btn btn-ghost btn-sm"
+                  >
+                    <Sparkles size={13} />
+                    <span>
+                      {generatingAi
+                        ? "Drafting..."
+                        : "Draft from Active Predictions"}
+                    </span>
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <input
+                    type="text"
+                    value={aiTopic}
+                    onChange={(e) => setAiTopic(e.target.value)}
+                    placeholder="Or enter a topic (e.g., Arsenal vs Chelsea UCL Preview)..."
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    disabled={generatingAi}
+                    onClick={() => handleGenerateAiBlog(false)}
+                    className="btn btn-primary btn-sm"
+                  >
+                    <Sparkles size={14} />
+                    <span>{generatingAi ? "Writing..." : "Generate"}</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="form-group">
                 <label>Headline / Title *</label>
                 <input

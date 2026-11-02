@@ -23,6 +23,8 @@ services:
         generateValue: true
       - key: AUTH_REDIRECT_URL
         value: https://b2win-qgvn.onrender.com/api/v1/users/confirm
+      - key: GEMINI_API_KEY
+        sync: false
 
   # 2. Optional Standalone Static Site for AdminFrontend
   - type: web
