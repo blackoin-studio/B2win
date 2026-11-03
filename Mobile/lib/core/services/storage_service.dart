@@ -17,6 +17,7 @@ class StorageService {
   static const String _keyCachedBlogs = 'cached_blogs';
   static const String _keySavedPredictionIds = 'saved_prediction_ids';
   static const String _keyVipExpiryMs = 'vip_pass_expiry_ms';
+  static const String _keyThemeMode = 'theme_mode';
 
   StorageService._({FlutterSecureStorage? secureStorage})
       : _secureStorage = secureStorage ?? const FlutterSecureStorage();
@@ -137,6 +138,15 @@ class StorageService {
     final expiry = DateTime.now().add(duration);
     await _preferences?.setInt(_keyVipExpiryMs, expiry.millisecondsSinceEpoch);
     return expiry;
+  }
+
+  // Theme Mode ('system', 'dark', 'light')
+  String getThemeMode() {
+    return _preferences?.getString(_keyThemeMode) ?? 'system';
+  }
+
+  Future<void> saveThemeMode(String mode) async {
+    await _preferences?.setString(_keyThemeMode, mode);
   }
 
   // Clear Session

@@ -3,6 +3,7 @@ import 'package:b2win/data/models/user_model.dart';
 import 'package:b2win/data/repositories/auth_repository.dart';
 import 'package:b2win/routes/app_routes.dart';
 import 'package:b2win/utils/helper/helper_controller.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ProfileController extends GetxController {
@@ -17,6 +18,7 @@ class ProfileController extends GetxController {
   final RxBool isUpdating = false.obs;
   final RxBool isDeleting = false.obs;
   final RxBool isVipActive = false.obs;
+  final RxBool isDarkMode = true.obs;
   final Rxn<DateTime> vipExpiry = Rxn<DateTime>();
   final Rxn<UserModel> currentUser = Rxn<UserModel>();
 
@@ -24,7 +26,32 @@ class ProfileController extends GetxController {
   void onInit() {
     loadUserProfile();
     loadVipStatus();
+    loadThemeMode();
     super.onInit();
+  }
+
+  Future<void> loadThemeMode() async {
+    try {
+      final storage = await StorageService.getInstance();
+      final saved = storage.getThemeMode();
+      if (saved == 'light') {
+        isDarkMode.value = false;
+      } else if (saved == 'dark') {
+        isDarkMode.value = true;
+      } else {
+        isDarkMode.value = Get.isDarkMode;
+      }
+    } catch (_) {}
+  }
+
+  Future<void> toggleThemeMode() async {
+    final nextDark = !isDarkMode.value;
+    isDarkMode.value = nextDark;
+    Get.changeThemeMode(nextDark ? ThemeMode.dark : ThemeMode.light);
+    try {
+      final storage = await StorageService.getInstance();
+      await storage.saveThemeMode(nextDark ? 'dark' : 'light');
+    } catch (_) {}
   }
 
   Future<void> loadVipStatus() async {

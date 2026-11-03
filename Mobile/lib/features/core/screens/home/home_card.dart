@@ -521,6 +521,105 @@ class MatchCard extends StatelessWidget {
 
     return Column(
       children: [
+        // Live Win-Rate & Tipster Accuracy Analytics Banner
+        Obx(() {
+          if (controller.games.isEmpty) return const SizedBox.shrink();
+          final settled = controller.wonCount + controller.lostCount;
+          final winRate = controller.winRatePercent;
+          final form = controller.recentSettledForm;
+
+          return Container(
+            margin: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF292938),
+                  Colors.orange.withValues(alpha: 0.18),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.greenAccent),
+                      ),
+                      child: Text(
+                        settled > 0 ? '$winRate% WIN' : 'LIVE TIPS',
+                        style: const TextStyle(
+                          color: Colors.greenAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Won: ${controller.wonCount} • Pending: ${controller.pendingCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                        Text(
+                          '${controller.games.length} Total Tracked Picks',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                if (form.isNotEmpty)
+                  Row(
+                    children: form
+                        .map(
+                          (f) => Container(
+                            margin: const EdgeInsets.only(left: 4),
+                            width: 20,
+                            height: 20,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: f == 'W'
+                                  ? Colors.green
+                                  : Colors.redAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              f,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+              ],
+            ),
+          );
+        }),
+
         // Search & Filter Bar + AI Smart Slip Button
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),

@@ -55,6 +55,32 @@ class GameController extends GetxController {
     return double.parse(product.toStringAsFixed(2));
   }
 
+  int get wonCount =>
+      games.where((g) => g.status.toLowerCase() == 'won').length;
+
+  int get lostCount =>
+      games.where((g) => g.status.toLowerCase() == 'lost').length;
+
+  int get pendingCount =>
+      games.where((g) => g.status.toLowerCase() == 'pending').length;
+
+  int get winRatePercent {
+    final settled = wonCount + lostCount;
+    if (settled == 0) return 0;
+    return ((wonCount / settled) * 100).round();
+  }
+
+  List<String> get recentSettledForm {
+    return games
+        .where((g) {
+          final s = g.status.toLowerCase();
+          return s == 'won' || s == 'lost';
+        })
+        .take(5)
+        .map((g) => g.status.toLowerCase() == 'won' ? 'W' : 'L')
+        .toList();
+  }
+
   bool isSaved(String id) => savedIds.contains(id);
 
   Future<void> toggleSaved(String id) async {

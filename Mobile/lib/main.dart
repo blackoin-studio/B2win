@@ -14,6 +14,12 @@ Future<void> main() async {
   final storageService = await StorageService.getInstance();
   final bool isOnboarded = storageService.isOnboarded();
   final bool isLoggedIn = storageService.isLoggedIn();
+  final String savedTheme = storageService.getThemeMode();
+  final ThemeMode initialThemeMode = savedTheme == 'dark'
+      ? ThemeMode.dark
+      : savedTheme == 'light'
+          ? ThemeMode.light
+          : ThemeMode.system;
 
   final String initialRoute = isLoggedIn
       ? AppRoutes.home
@@ -23,7 +29,7 @@ Future<void> main() async {
 
   runApp(
     GetMaterialApp(
-      themeMode: ThemeMode.system,
+      themeMode: initialThemeMode,
       theme: TAppTheme.lightTheme,
       darkTheme: TAppTheme.darkTheme,
       debugShowCheckedModeBanner: false,

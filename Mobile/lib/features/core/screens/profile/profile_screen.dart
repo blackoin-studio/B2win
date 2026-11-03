@@ -156,6 +156,17 @@ class ProfileScreen extends StatelessWidget {
                 icon: LineAwesomeIcons.user_edit,
                 onPress: () => _showEditProfileDialog(context, profileController),
               ),
+              Obx(
+                () => ProfileMenuWidget(
+                  title: profileController.isDarkMode.value
+                      ? "Appearance: Dark Mode"
+                      : "Appearance: Light Mode",
+                  icon: profileController.isDarkMode.value
+                      ? LineAwesomeIcons.moon
+                      : LineAwesomeIcons.sun,
+                  onPress: () => profileController.toggleThemeMode(),
+                ),
+              ),
               ProfileMenuWidget(
                 title: "Rate On Play Store",
                 icon: LineAwesomeIcons.star,
