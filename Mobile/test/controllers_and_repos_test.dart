@@ -144,6 +144,23 @@ void main() {
       expect(controller.filteredGames.length, 1);
       expect(controller.filteredGames.first.homeTeam, 'Real Madrid');
     });
+
+    test('bookmarks predictions into Saved Slip and computes combined odds',
+        () async {
+      await controller.fetchGameData();
+
+      await controller.toggleSaved('1');
+      await controller.toggleSaved('2');
+      expect(controller.isSaved('1'), isTrue);
+      expect(controller.isSaved('2'), isTrue);
+
+      controller.setStatusFilter('saved');
+      expect(controller.filteredGames.length, 2);
+      expect(controller.savedCombinedOdds, greaterThan(2.0));
+
+      await controller.toggleSaved('1');
+      expect(controller.filteredGames.length, 1);
+    });
   });
 
   group('BlogRepository', () {

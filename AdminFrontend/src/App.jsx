@@ -16,6 +16,7 @@ export default function App() {
   const [blogs, setBlogs] = useState([]);
   const [users, setUsers] = useState([]);
   const [adSettings, setAdSettings] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
   const [aiInsights, setAiInsights] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -32,13 +33,14 @@ export default function App() {
     if (!admin) return;
     setRefreshing(true);
     try {
-      const [predsData, blogsData, usersData, adsData, aiData] =
+      const [predsData, blogsData, usersData, adsData, aiData, annData] =
         await Promise.all([
           apiRequest("/predictions"),
           apiRequest("/blogs"),
           apiRequest("/users"),
           apiRequest("/settings/ads").catch(() => null),
           apiRequest("/ai/overview-insights").catch(() => null),
+          apiRequest("/settings/announcements").catch(() => null),
         ]);
       setPredictions(Array.isArray(predsData) ? predsData : []);
       setBlogs(Array.isArray(blogsData) ? blogsData : []);
@@ -48,6 +50,9 @@ export default function App() {
       }
       if (aiData?.data) {
         setAiInsights(aiData.data);
+      }
+      if (Array.isArray(annData?.data)) {
+        setAnnouncements(annData.data);
       }
     } catch (err) {
       showToast(err.message || "Failed to load dashboard data", true);
@@ -152,6 +157,7 @@ export default function App() {
         {activeTab === "ads" && (
           <AdsTab
             adSettings={adSettings}
+            announcements={announcements}
             onReload={loadAllData}
             showToast={showToast}
           />

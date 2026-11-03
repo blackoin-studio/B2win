@@ -107,6 +107,26 @@ class AuthRepository {
     }
   }
 
+  Future<UserModel> updateAccount({
+    String? username,
+    String? newPassword,
+  }) async {
+    final data = await _provider.updateMe(
+      username: username,
+      newPassword: newPassword,
+    );
+    final user = UserModel.fromJson(data);
+    final storage = await _getStorage();
+    await storage.saveUser(user);
+    return user;
+  }
+
+  Future<void> deleteAccount() async {
+    await _provider.deleteMe();
+    final storage = await _getStorage();
+    await storage.clearAuthSession();
+  }
+
   Future<void> logout() async {
     try {
       await _provider.logout();

@@ -194,9 +194,168 @@ const updateAdSettings = async (req, res) => {
   }
 };
 
+// ============================================================================
+// IN-APP ANNOUNCEMENTS & BROADCAST NOTIFICATIONS
+// ============================================================================
+const ANNOUNCEMENTS_KEY = "announcements";
+const ANNOUNCEMENTS_STORAGE_PATH = "_config/announcements.json";
+
+const DEFAULT_ANNOUNCEMENTS = [
+  {
+    id: "welcome-b2win-v2",
+    title: "Welcome to B2win v2.0!",
+    body: "Explore AI Match Insights, Smart Slip Builder, Saved Slips, and VIP Tips.",
+    type: "promo",
+    createdAt: new Date().toISOString(),
+  },
+];
+
+let inMemoryAnnouncementsCache = null;
+
+async function readAnnouncementsFromSupabase() {
+  try {
+    const { data, error } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", ANNOUNCEMENTS_KEY)
+      .maybeSingle();
+
+    if (!error && data && Array.isArray(data.value?.items)) {
+      inMemoryAnnouncementsCache = data.value.items;
+      return data.value.items;
+    }
+  } catch (_) {}
+
+  try {
+    const { data: blob, error: storageErr } = await supabase.storage
+      .from(MEDIA_BUCKET)
+      .download(ANNOUNCEMENTS_STORAGE_PATH);
+
+    if (!storageErr && blob) {
+      const text = await blob.text();
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed?.items)) {
+        inMemoryAnnouncementsCache = parsed.items;
+        return parsed.items;
+      }
+    }
+  } catch (_) {}
+
+  return inMemoryAnnouncementsCache || DEFAULT_ANNOUNCEMENTS;
+}
+
+async function writeAnnouncementsToSupabase(items, adminUser) {
+  const cleanItems = Array.isArray(items) ? items.slice(0, 30) : [];
+  inMemoryAnnouncementsCache = cleanItems;
+  const payload = {
+    items: cleanItems,
+    updatedAt: new Date().toISOString(),
+    updatedBy: adminUser?.email || "admin",
+  };
+
+  try {
+    await supabase.from("app_settings").upsert(
+      {
+        key: ANNOUNCEMENTS_KEY,
+        value: payload,
+        updated_by: adminUser?.id || null,
+        updated_at: payload.updatedAt,
+      },
+      { onConflict: "key" }
+    );
+  } catch (_) {}
+
+  try {
+    const buffer = Buffer.from(JSON.stringify(payload, null, 2), "utf-8");
+    await supabase.storage
+      .from(MEDIA_BUCKET)
+      .upload(ANNOUNCEMENTS_STORAGE_PATH, buffer, {
+        contentType: "application/json",
+        upsert: true,
+      });
+  } catch (_) {}
+
+  return cleanItems;
+}
+
+const getAnnouncements = async (req, res) => {
+  try {
+    const items = await readAnnouncementsFromSupabase();
+    return res.status(200).json({
+      success: true,
+      data: items,
+    });
+  } catch (err) {
+    return res.status(200).json({
+      success: true,
+      data: DEFAULT_ANNOUNCEMENTS,
+    });
+  }
+};
+
+const createAnnouncement = async (req, res) => {
+  try {
+    const { title, body, type = "tip" } = req.body || {};
+    if (!title || !body) {
+      return res.status(400).json({
+        success: false,
+        error: "Title and message body are required",
+      });
+    }
+
+    const current = await readAnnouncementsFromSupabase();
+    const newItem = {
+      id: `ann-${Date.now()}`,
+      title: String(title).trim(),
+      body: String(body).trim(),
+      type: ["tip", "promo", "news"].includes(type) ? type : "tip",
+      createdAt: new Date().toISOString(),
+    };
+
+    const updated = await writeAnnouncementsToSupabase(
+      [newItem, ...current],
+      req.user
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Announcement broadcasted to all mobile users",
+      data: updated,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: "Failed to broadcast announcement",
+    });
+  }
+};
+
+const deleteAnnouncement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const current = await readAnnouncementsFromSupabase();
+    const filtered = current.filter((item) => item.id !== id);
+    const updated = await writeAnnouncementsToSupabase(filtered, req.user);
+
+    return res.status(200).json({
+      success: true,
+      message: "Announcement removed",
+      data: updated,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: "Failed to delete announcement",
+    });
+  }
+};
+
 module.exports = {
   getAdSettings,
   updateAdSettings,
+  getAnnouncements,
+  createAnnouncement,
+  deleteAnnouncement,
   DEFAULT_AD_SETTINGS,
 };
 

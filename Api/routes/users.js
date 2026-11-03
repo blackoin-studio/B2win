@@ -10,6 +10,8 @@ const {
   refreshToken,
   logoutUser,
   getMe,
+  updateMe,
+  deleteMe,
   fetchUsers,
   updateUserRole,
 } = require("../controllers/users");
@@ -27,7 +29,11 @@ router.route("/login").post(loginUser);
 router.route("/refresh").post(refreshToken);
 
 // Authenticated user routes
-router.route("/me").get(protect, getMe);
+router
+  .route("/me")
+  .get(protect, getMe)
+  .patch(protect, updateMe)
+  .delete(protect, deleteMe);
 router.route("/logout").post(protect, logoutUser);
 
 // Admin-protected user management routes

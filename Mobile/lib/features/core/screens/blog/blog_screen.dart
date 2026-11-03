@@ -6,6 +6,7 @@ import 'package:b2win/data/models/blog_model.dart';
 import 'package:b2win/features/core/controllers/ad_controller.dart';
 import 'package:b2win/features/core/controllers/blog_controller.dart';
 import 'package:b2win/features/core/controllers/profile_controller.dart';
+import 'package:b2win/features/core/screens/home/home_screen.dart';
 import 'package:b2win/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -36,17 +37,20 @@ class BlogScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header Section
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   radius: 24,
                   backgroundImage: AssetImage('assets/avatar.png'),
                 ),
-                Icon(
-                  Icons.notifications_none,
-                  color: Colors.white,
-                  size: 28,
+                IconButton(
+                  onPressed: () => HomeScreen.openAnnouncementsSheet(context),
+                  icon: const Icon(
+                    Icons.notifications_none,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
               ],
             ),

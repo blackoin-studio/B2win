@@ -7,6 +7,9 @@ import {
   Sliders,
   Save,
   RotateCcw,
+  Bell,
+  Send,
+  Trash2,
 } from "lucide-react";
 import { apiRequest } from "../services/api";
 
@@ -17,7 +20,12 @@ const TEST_IDS = {
   iosInterstitialUnitId: "ca-app-pub-3940256099942544/4411468910",
 };
 
-export default function AdsTab({ adSettings, onReload, showToast }) {
+export default function AdsTab({
+  adSettings,
+  announcements = [],
+  onReload,
+  showToast,
+}) {
   const [form, setForm] = useState({
     adsEnabled: false,
     testMode: true,
@@ -29,6 +37,12 @@ export default function AdsTab({ adSettings, onReload, showToast }) {
     ...TEST_IDS,
   });
   const [saving, setSaving] = useState(false);
+  const [annForm, setAnnForm] = useState({
+    title: "",
+    body: "",
+    type: "tip",
+  });
+  const [sendingAnn, setSendingAnn] = useState(false);
 
   useEffect(() => {
     if (adSettings) {
@@ -88,6 +102,35 @@ export default function AdsTab({ adSettings, onReload, showToast }) {
       ...TEST_IDS,
     }));
     showToast("Populated official Google AdMob test unit IDs");
+  }
+
+  async function handleCreateAnnouncement(e) {
+    e.preventDefault();
+    if (!annForm.title.trim() || !annForm.body.trim()) return;
+    setSendingAnn(true);
+    try {
+      await apiRequest("/settings/announcements", {
+        method: "POST",
+        body: JSON.stringify(annForm),
+      });
+      setAnnForm({ title: "", body: "", type: "tip" });
+      showToast("Announcement broadcasted to all mobile app users!");
+      if (onReload) await onReload();
+    } catch (err) {
+      showToast(err.message || "Failed to broadcast announcement", true);
+    } finally {
+      setSendingAnn(false);
+    }
+  }
+
+  async function handleDeleteAnnouncement(id) {
+    try {
+      await apiRequest(`/settings/announcements/${id}`, { method: "DELETE" });
+      showToast("Announcement removed");
+      if (onReload) await onReload();
+    } catch (err) {
+      showToast(err.message || "Failed to delete announcement", true);
+    }
   }
 
   return (
@@ -454,6 +497,109 @@ export default function AdsTab({ adSettings, onReload, showToast }) {
           </div>
         </section>
       </form>
+
+      {/* In-App Broadcasts & Announcements Center */}
+      <section className="card-panel" style={{ marginTop: "1.5rem" }}>
+        <div className="card-panel-header">
+          <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Bell size={18} className="text-amber" />
+            <span>In-App Broadcasts &amp; Announcements Center</span>
+          </h3>
+          <span className="badge badge-neutral">
+            {announcements.length} Active Broadcast(s)
+          </span>
+        </div>
+
+        <form
+          onSubmit={handleCreateAnnouncement}
+          style={{ marginBottom: "1.25rem" }}
+        >
+          <div className="form-row">
+            <div className="form-group" style={{ flex: 2 }}>
+              <label>Announcement Title *</label>
+              <input
+                type="text"
+                required
+                value={annForm.title}
+                onChange={(e) =>
+                  setAnnForm({ ...annForm, title: e.target.value })
+                }
+                placeholder="e.g. VIP Champions League Tip Just Dropped!"
+              />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Category</label>
+              <select
+                value={annForm.type}
+                onChange={(e) =>
+                  setAnnForm({ ...annForm, type: e.target.value })
+                }
+              >
+                <option value="tip">Match Tip Alert</option>
+                <option value="promo">VIP / Promo</option>
+                <option value="news">Platform News</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group" style={{ marginTop: "0.75rem" }}>
+            <label>Message Body *</label>
+            <div style={{ display: "flex", gap: "0.75rem" }}>
+              <input
+                type="text"
+                required
+                value={annForm.body}
+                onChange={(e) =>
+                  setAnnForm({ ...annForm, body: e.target.value })
+                }
+                placeholder="Write a short notification message for mobile users..."
+                style={{ flex: 1 }}
+              />
+              <button
+                type="submit"
+                disabled={sendingAnn}
+                className="btn btn-primary"
+              >
+                <Send size={15} />
+                <span>{sendingAnn ? "Sending..." : "Broadcast"}</span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div className="mini-list">
+          {announcements.map((item) => (
+            <div key={item.id} className="mini-list-item">
+              <div>
+                <div className="mini-item-title">
+                  <span
+                    className={`badge ${
+                      item.type === "promo"
+                        ? "badge-pending"
+                        : item.type === "tip"
+                        ? "badge-won"
+                        : "badge-neutral"
+                    }`}
+                    style={{ marginRight: 8 }}
+                  >
+                    {(item.type || "tip").toUpperCase()}
+                  </span>
+                  {item.title}
+                </div>
+                <div className="mini-item-sub">{item.body}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDeleteAnnouncement(item.id)}
+                className="btn btn-danger-outline btn-sm"
+                title="Remove announcement"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

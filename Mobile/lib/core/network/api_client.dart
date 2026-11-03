@@ -126,6 +126,66 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> patch(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    bool requireAuth = true,
+  }) async {
+    try {
+      final uri = Uri.parse('$baseUrl$endpoint');
+      var headers = await _getHeaders(requireAuth: requireAuth);
+      final encodedBody = body != null ? jsonEncode(body) : null;
+      var response = await _client.patch(
+        uri,
+        headers: headers,
+        body: encodedBody,
+      );
+
+      if (response.statusCode == 401 && requireAuth) {
+        final refreshed = await _tryRefreshToken();
+        if (refreshed) {
+          headers = await _getHeaders(requireAuth: true);
+          response = await _client.patch(
+            uri,
+            headers: headers,
+            body: encodedBody,
+          );
+        }
+      }
+
+      return _processResponse(response);
+    } on SocketException {
+      throw NetworkException();
+    } on http.ClientException {
+      throw NetworkException();
+    }
+  }
+
+  Future<dynamic> delete(
+    String endpoint, {
+    bool requireAuth = true,
+  }) async {
+    try {
+      final uri = Uri.parse('$baseUrl$endpoint');
+      var headers = await _getHeaders(requireAuth: requireAuth);
+      var response = await _client.delete(uri, headers: headers);
+
+      if (response.statusCode == 401 && requireAuth) {
+        final refreshed = await _tryRefreshToken();
+        if (refreshed) {
+          headers = await _getHeaders(requireAuth: true);
+          response = await _client.delete(uri, headers: headers);
+        }
+      }
+
+      return _processResponse(response);
+    } on SocketException {
+      throw NetworkException();
+    } on http.ClientException {
+      throw NetworkException();
+    }
+  }
+
   dynamic _processResponse(http.Response response) {
     dynamic jsonResponse;
     try {

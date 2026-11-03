@@ -582,6 +582,131 @@ exports.getMe = async (req, res) => {
   });
 };
 
+/**
+ * PATCH /api/v1/users/me
+ * Allows an authenticated user to update their username and/or password.
+ */
+exports.updateMe = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const userEmail = req.user?.email;
+    const { username, newPassword } = req.body || {};
+
+    if (!username && !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: "Provide a new username or newPassword to update",
+      });
+    }
+
+    const profileUpdates = {};
+    if (username && String(username).trim()) {
+      const cleanUsername = String(username).trim();
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("username", cleanUsername)
+        .neq("id", userId)
+        .maybeSingle();
+
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          error: "Username is already taken",
+        });
+      }
+      profileUpdates.username = cleanUsername;
+    }
+
+    if (newPassword) {
+      if (String(newPassword).length < 6) {
+        return res.status(400).json({
+          success: false,
+          error: "New password must be at least 6 characters",
+        });
+      }
+      const salt = await bcrypt.genSalt(10);
+      profileUpdates.password_hash = await bcrypt.hash(
+        String(newPassword),
+        salt
+      );
+    }
+
+    let updatedProfile = req.user;
+    if (Object.keys(profileUpdates).length > 0) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .update(profileUpdates)
+        .eq("id", userId)
+        .select("id, email, username, is_admin, created_at")
+        .maybeSingle();
+
+      if (!error && data) {
+        updatedProfile = mapUser(data);
+      }
+    }
+
+    const authUser = await findAuthUserByEmailOrId(userId, userEmail);
+    if (authUser) {
+      const authPayload = {};
+      if (newPassword) {
+        authPayload.password = String(newPassword);
+      }
+      if (profileUpdates.username) {
+        authPayload.user_metadata = {
+          ...authUser.user_metadata,
+          username: profileUpdates.username,
+        };
+      }
+      if (Object.keys(authPayload).length > 0) {
+        await supabase.auth.admin.updateUserById(authUser.id, authPayload);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Account updated successfully",
+      user: updatedProfile,
+    });
+  } catch (err) {
+    console.error("Update account error:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to update account",
+    });
+  }
+};
+
+/**
+ * DELETE /api/v1/users/me
+ * Permanently deletes the authenticated user's profile and Supabase Auth account
+ * (Required for Google Play Store Account Deletion policy compliance).
+ */
+exports.deleteMe = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const userEmail = req.user?.email;
+
+    const authUser = await findAuthUserByEmailOrId(userId, userEmail);
+    if (authUser) {
+      await supabase.auth.admin.deleteUser(authUser.id);
+    }
+
+    await supabase.from("profiles").delete().eq("id", userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Your account and personal data have been permanently deleted",
+    });
+  } catch (err) {
+    console.error("Delete account error:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to delete account",
+    });
+  }
+};
+
 exports.fetchUsers = async (req, res) => {
   try {
     const { data: users, error } = await supabase

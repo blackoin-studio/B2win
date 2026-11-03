@@ -81,6 +81,28 @@ class AuthProvider {
     return response as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> updateMe({
+    String? username,
+    String? newPassword,
+  }) async {
+    final response = await _apiClient.patch(
+      '/users/me',
+      body: {
+        if (username != null && username.trim().isNotEmpty)
+          'username': username.trim(),
+        if (newPassword != null && newPassword.isNotEmpty)
+          'newPassword': newPassword,
+      },
+      requireAuth: true,
+    );
+    return response as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> deleteMe() async {
+    final response = await _apiClient.delete('/users/me', requireAuth: true);
+    return response as Map<String, dynamic>;
+  }
+
   Future<void> logout() async {
     await _apiClient.post('/users/logout', requireAuth: true);
   }

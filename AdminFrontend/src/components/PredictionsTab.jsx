@@ -254,7 +254,21 @@ export default function PredictionsTab({ predictions, onReload, showToast }) {
                       <span className="score-pill">{p.score || "-"}</span>
                     </td>
                     <td>
-                      <strong>{p.tip}</strong>{" "}
+                      {String(p.tip || "").startsWith("[VIP]") ? (
+                        <>
+                          <span
+                            className="badge badge-pending"
+                            style={{ marginRight: 6 }}
+                          >
+                            VIP
+                          </span>
+                          <strong>
+                            {String(p.tip).replace(/^\[VIP\]\s*/i, "")}
+                          </strong>
+                        </>
+                      ) : (
+                        <strong>{p.tip}</strong>
+                      )}{" "}
                       <span className="cell-sub">(@{p.odds})</span>
                     </td>
                     <td>
@@ -469,6 +483,43 @@ export default function PredictionsTab({ predictions, onReload, showToast }) {
                   </select>
                 </div>
               </div>
+
+              <label
+                className="mini-list-item"
+                style={{
+                  cursor: "pointer",
+                  marginBottom: "1rem",
+                  background: "rgba(245, 158, 11, 0.08)",
+                  border: "1px solid rgba(245, 158, 11, 0.3)",
+                }}
+              >
+                <div>
+                  <div className="mini-item-title" style={{ color: "#fcd34d" }}>
+                    VIP / Premium Prediction Pick
+                  </div>
+                  <div className="mini-item-sub">
+                    Locks the tip behind B2win VIP Pass in the mobile app so
+                    free users must unlock VIP to view the tip.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={String(form.tip || "").startsWith("[VIP]")}
+                  onChange={(e) => {
+                    const cleanTip = String(form.tip || "").replace(
+                      /^\[VIP\]\s*/i,
+                      ""
+                    );
+                    setForm({
+                      ...form,
+                      tip: e.target.checked
+                        ? `[VIP] ${cleanTip || "Over 2.5"}`
+                        : cleanTip,
+                    });
+                  }}
+                  style={{ width: 20, height: 20, accentColor: "#f59e0b" }}
+                />
+              </label>
 
               <div className="form-row">
                 <div className="form-group">

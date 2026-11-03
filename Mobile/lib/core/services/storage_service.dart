@@ -15,6 +15,8 @@ class StorageService {
   static const String _keyCachedUser = 'cached_user_profile';
   static const String _keyCachedPredictions = 'cached_predictions';
   static const String _keyCachedBlogs = 'cached_blogs';
+  static const String _keySavedPredictionIds = 'saved_prediction_ids';
+  static const String _keyVipExpiryMs = 'vip_pass_expiry_ms';
 
   StorageService._({FlutterSecureStorage? secureStorage})
       : _secureStorage = secureStorage ?? const FlutterSecureStorage();
@@ -106,6 +108,35 @@ class StorageService {
 
   String? getCachedBlogs() {
     return _preferences?.getString(_keyCachedBlogs);
+  }
+
+  // Bookmarked / Saved Slip Prediction IDs
+  List<String> getSavedPredictionIds() {
+    return _preferences?.getStringList(_keySavedPredictionIds) ?? <String>[];
+  }
+
+  Future<void> saveSavedPredictionIds(List<String> ids) async {
+    await _preferences?.setStringList(_keySavedPredictionIds, ids);
+  }
+
+  // VIP 24-Hour Pass Management
+  bool isVipPassActive() {
+    final expiryMs = _preferences?.getInt(_keyVipExpiryMs) ?? 0;
+    return expiryMs > DateTime.now().millisecondsSinceEpoch;
+  }
+
+  DateTime? getVipPassExpiry() {
+    final expiryMs = _preferences?.getInt(_keyVipExpiryMs) ?? 0;
+    if (expiryMs <= DateTime.now().millisecondsSinceEpoch) return null;
+    return DateTime.fromMillisecondsSinceEpoch(expiryMs);
+  }
+
+  Future<DateTime> activateVipPass({
+    Duration duration = const Duration(hours: 24),
+  }) async {
+    final expiry = DateTime.now().add(duration);
+    await _preferences?.setInt(_keyVipExpiryMs, expiry.millisecondsSinceEpoch);
+    return expiry;
   }
 
   // Clear Session

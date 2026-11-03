@@ -8,9 +8,11 @@ import 'package:b2win/data/providers/ai_provider.dart';
 import 'package:b2win/data/repositories/ai_repository.dart';
 import 'package:b2win/features/core/controllers/ad_controller.dart';
 import 'package:b2win/features/core/controllers/prediction_controller.dart';
+import 'package:b2win/features/core/controllers/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 class MatchCard extends StatelessWidget {
   const MatchCard({super.key});
@@ -427,14 +429,94 @@ class MatchCard extends StatelessWidget {
     );
   }
 
+  bool _isVipPrediction(PredictionModel game) =>
+      game.tip.trim().toUpperCase().startsWith('[VIP]');
+
+  String _cleanVipTip(String tip) =>
+      tip.replaceFirst(RegExp(r'^\[VIP\]\s*', caseSensitive: false), '').trim();
+
+  void _showVipUnlockDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E2C),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(22, 20, 22, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.workspace_premium, color: Colors.amberAccent, size: 28),
+                  SizedBox(width: 10),
+                  Text(
+                    'Unlock VIP Predictions',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'This pick is reserved for B2WIN VIP Pass holders. Activate your free 24-hour Ad-Supported VIP Pass now to unlock all VIP picks!',
+                style: TextStyle(color: Colors.white70, height: 1.45),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (Get.isRegistered<AdController>()) {
+                      Get.find<AdController>()
+                          .recordInteractionAndMaybeShowInterstitial();
+                    }
+                    if (Get.isRegistered<ProfileController>()) {
+                      await Get.find<ProfileController>().unlockVipPass();
+                    }
+                    if (ctx.mounted) Navigator.of(ctx).pop();
+                  },
+                  icon: const Icon(Icons.lock_open_rounded),
+                  label: const Text(
+                    'Activate 24h VIP Pass (Free)',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final GameController controller = Get.find<GameController>();
+    final ProfileController? profileController =
+        Get.isRegistered<ProfileController>()
+            ? Get.find<ProfileController>()
+            : null;
     const filters = [
       {'id': 'all', 'label': 'All'},
       {'id': 'pending', 'label': 'Pending'},
       {'id': 'won', 'label': 'Won'},
       {'id': 'lost', 'label': 'Lost'},
+      {'id': 'saved', 'label': 'Saved'},
     ];
 
     return Column(
@@ -468,10 +550,13 @@ class MatchCard extends StatelessWidget {
                       ...filters.map((f) {
                         final isSelected =
                             controller.selectedStatus.value == f['id'];
+                        final label = f['id'] == 'saved'
+                            ? 'Saved (${controller.savedIds.length})'
+                            : f['label']!;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
                           child: ChoiceChip(
-                            label: Text(f['label']!),
+                            label: Text(label),
                             selected: isSelected,
                             onSelected: (_) =>
                                 controller.setStatusFilter(f['id']!),
@@ -503,6 +588,70 @@ class MatchCard extends StatelessWidget {
           ),
         ),
 
+        // Saved Slip Summary Banner when 'saved' filter is selected
+        Obx(() {
+          if (controller.selectedStatus.value != 'saved' ||
+              controller.savedIds.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          final combinedOdds = controller.savedCombinedOdds;
+          final savedGames = controller.games
+              .where((g) => controller.savedIds.contains(GameController.gameKey(g)))
+              .toList();
+          return Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.45)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'My Saved Slip (${savedGames.length} Picks)',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.5,
+                      ),
+                    ),
+                    Text(
+                      'Combined Odds: @$combinedOdds',
+                      style: const TextStyle(
+                        color: Colors.amberAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    final lines = savedGames
+                        .map(
+                          (g) =>
+                              '⚽ ${g.homeTeam} vs ${g.awayTeam} (${g.league}) — Tip: ${_cleanVipTip(g.tip)} @${g.odds}',
+                        )
+                        .join('\n');
+                    Share.share(
+                      '🔥 My B2WIN Accumulator Slip (@$combinedOdds):\n$lines\n\nDownload B2WIN on Google Play!',
+                    );
+                  },
+                  icon: const Icon(Icons.share, size: 16, color: Colors.amberAccent),
+                  label: const Text(
+                    'Share Slip',
+                    style: TextStyle(color: Colors.amberAccent),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+
         // Predictions List
         Expanded(
           child: Obx(() {
@@ -511,6 +660,8 @@ class MatchCard extends StatelessWidget {
             }
 
             final visibleGames = controller.filteredGames;
+            final isVipUnlocked = (profileController?.isVipActive.value ?? false) ||
+                (profileController?.currentUser.value?.isAdmin ?? false);
 
             if (visibleGames.isEmpty) {
               return RefreshIndicator(
@@ -548,8 +699,12 @@ class MatchCard extends StatelessWidget {
                 itemCount: visibleGames.length,
                 itemBuilder: (context, index) {
                   final PredictionModel game = visibleGames[index];
+                  final String gameKey = GameController.gameKey(game);
                   final int aiConfidence =
                       AiRepository.computeConfidence(game.odds);
+                  final bool isVip = _isVipPrediction(game);
+                  final bool isLockedVip = isVip && !isVipUnlocked;
+                  final bool isSaved = controller.savedIds.contains(gameKey);
 
                   return Card(
                     elevation: 4.0,
@@ -585,9 +740,48 @@ class MatchCard extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              Text(
-                                _formatDate(game.date),
-                                style: const TextStyle(fontSize: 13.0),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _formatDate(game.date),
+                                    style: const TextStyle(fontSize: 12.5),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  InkWell(
+                                    onTap: () => controller.toggleSaved(gameKey),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: Icon(
+                                        isSaved
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_border,
+                                        size: 20,
+                                        color: isSaved
+                                            ? Colors.amberAccent
+                                            : Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      final tipText = isLockedVip
+                                          ? 'VIP Pick'
+                                          : _cleanVipTip(game.tip);
+                                      Share.share(
+                                        '⚽ ${game.homeTeam} vs ${game.awayTeam} (${game.league})\n🎯 B2WIN Tip: $tipText (@${game.odds}) • $aiConfidence% AI Confidence\n📲 Get more tips on B2WIN!',
+                                      );
+                                    },
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(4.0),
+                                      child: Icon(
+                                        Icons.share_outlined,
+                                        size: 19,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -655,28 +849,68 @@ class MatchCard extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6.0,
-                                  horizontal: 12.0,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange,
-                                  borderRadius: BorderRadius.circular(20.0),
-                                ),
-                                child: Text(
-                                  'Tip: ${game.tip}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+                              if (isLockedVip)
+                                GestureDetector(
+                                  onTap: () => _showVipUnlockDialog(context),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6.0,
+                                      horizontal: 12.0,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber,
+                                      borderRadius: BorderRadius.circular(20.0),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.lock,
+                                          size: 14,
+                                          color: Colors.black,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'VIP Tip — Tap to Unlock',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6.0,
+                                    horizontal: 12.0,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isVip ? Colors.amber : Colors.orange,
+                                    borderRadius: BorderRadius.circular(20.0),
+                                  ),
+                                  child: Text(
+                                    isVip
+                                        ? '👑 VIP: ${_cleanVipTip(game.tip)}'
+                                        : 'Tip: ${game.tip}',
+                                    style: TextStyle(
+                                      color: isVip ? Colors.black : Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
-                              ),
                               Row(
                                 children: [
                                   TextButton.icon(
-                                    onPressed: () =>
-                                        _showAiMatchInsightSheet(context, game),
+                                    onPressed: () => isLockedVip
+                                        ? _showVipUnlockDialog(context)
+                                        : _showAiMatchInsightSheet(
+                                            context,
+                                            game,
+                                          ),
                                     icon: const Icon(
                                       Icons.auto_awesome,
                                       size: 16,
