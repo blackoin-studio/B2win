@@ -22,7 +22,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: AUTH_REDIRECT_URL
-        value: https://b2win-qgvn.onrender.com/api/v1/users/confirm
+        value: https://b2win-api.onrender.com/api/v1/users/confirm
       - key: GEMINI_API_KEY
         sync: false
 
@@ -35,7 +35,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_ORIGIN
-        value: https://b2win-qgvn.onrender.com
+        value: https://b2win-api.onrender.com
     routes:
       - type: rewrite
         source: /*
